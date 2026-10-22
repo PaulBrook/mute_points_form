@@ -1,264 +1,810 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mute Points Debate Participant Registration Form</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
-    <style>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mute Points — Debate Registration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Josefin Sans', sans-serif;
+      background-color: #4C0000;
+      color: #1a1a1a;
+      padding: 40px 16px 60px;
+      min-height: 100vh;
+    }
+
+    /* ── Card ── */
+    .card {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.35);
+    }
+
+    /* ── Header ── */
+    .card-header {
+      background: #4C0000;
+      color: #fff;
+      padding: 44px 52px 40px;
+      text-align: center;
+    }
+
+    .brand-label {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 14px;
+    }
+
+    .card-header h1 {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .card-header .intro {
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.7;
+      opacity: 0.85;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .card-header .intro a {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    /* ── Body ── */
+    .card-body {
+      padding: 44px 52px 52px;
+    }
+
+    /* ── Sections ── */
+    .form-section {
+      margin-bottom: 40px;
+    }
+
+    .section-heading {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #4C0000;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #4C0000;
+      margin-bottom: 28px;
+    }
+
+    /* ── Fields ── */
+    .field {
+      margin-bottom: 22px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field > label.field-label {
+      display: block;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #4C0000;
+      margin-bottom: 6px;
+    }
+
+    .field .hint {
+      display: block;
+      font-size: 14px;
+      font-weight: 300;
+      font-style: italic;
+      color: #777;
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #d0b0b0;
+      border-radius: 4px;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 400;
+      color: #1a1a1a;
+      background: #fff;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #4C0000;
+      box-shadow: 0 0 0 3px rgba(76,0,0,0.08);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234C0000' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+      cursor: pointer;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 88px;
+      line-height: 1.6;
+    }
+
+    /* ── Validation ── */
+    .field-error {
+      display: none;
+      font-size: 13px;
+      color: #c00000;
+      margin-top: 5px;
+      font-weight: 400;
+    }
+
+    .field.has-error input,
+    .field.has-error select,
+    .field.has-error textarea {
+      border-color: #c00000;
+    }
+
+    .field.has-error .field-error {
+      display: block;
+    }
+
+    /* ── Custom checkboxes ── */
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 20px;
+    }
+
+    @media (max-width: 460px) {
+      .checkbox-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      padding: 3px 0;
+    }
+
+    .check-label input[type="checkbox"] {
+      appearance: none;
+      width: 17px;
+      height: 17px;
+      min-width: 17px;
+      border: 2px solid #c0a0a0;
+      border-radius: 3px;
+      background: #fff;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.12s, background 0.12s;
+    }
+
+    .check-label input[type="checkbox"]:checked {
+      background: #4C0000;
+      border-color: #4C0000;
+    }
+
+    .check-label input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 4px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .check-label input[type="checkbox"]:focus-visible {
+      outline: 2px solid #4C0000;
+      outline-offset: 2px;
+    }
+
+    .check-label .check-text {
+      font-size: 15px;
+      font-weight: 400;
+      color: #1a1a1a;
+      line-height: 1.3;
+    }
+
+    /* ── Custom radio buttons ── */
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .radio-label input[type="radio"] {
+      appearance: none;
+      width: 17px;
+      height: 17px;
+      min-width: 17px;
+      border: 2px solid #c0a0a0;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 0.12s;
+    }
+
+    .radio-label input[type="radio"]:checked {
+      border-color: #4C0000;
+    }
+
+    .radio-label input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 7px;
+      height: 7px;
+      background: #4C0000;
+      border-radius: 50%;
+    }
+
+    .radio-label input[type="radio"]:focus-visible {
+      outline: 2px solid #4C0000;
+      outline-offset: 2px;
+    }
+
+    .radio-label .radio-text {
+      font-size: 15px;
+      font-weight: 400;
+      color: #1a1a1a;
+    }
+
+    /* ── Conditional reveal ── */
+    .conditional {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+      margin-top: 0;
+    }
+
+    .conditional.visible {
+      max-height: 800px;
+      opacity: 1;
+      margin-top: 20px;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #f0e4e4;
+      margin: 40px 0;
+    }
+
+    /* ── Submit ── */
+    .submit-row {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    button[type="submit"] {
+      background: #4C0000;
+      color: #fff;
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 15px 56px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      background: #6B0000;
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* ── Error banner ── */
+    .error-banner {
+      display: none;
+      background: #fff5f5;
+      border: 1px solid #c00000;
+      color: #c00000;
+      padding: 12px 16px;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.5;
+      text-align: center;
+      width: 100%;
+    }
+
+    .error-banner.visible {
+      display: block;
+    }
+
+    /* ── Success view ── */
+    #success-view {
+      display: none;
+      text-align: center;
+      padding: 72px 52px;
+    }
+
+    #success-view.visible {
+      display: block;
+    }
+
+    .success-mark {
+      width: 56px;
+      height: 56px;
+      background: #4C0000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+
+    .success-mark svg {
+      width: 26px;
+      height: 26px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    #success-view h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #4C0000;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    #success-view p {
+      font-size: 16px;
+      font-weight: 300;
+      color: #555;
+      line-height: 1.7;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 580px) {
       body {
-          font-family: 'Cinzel', serif;
-          background-color: #4c0000;
-          color: #333;
-          margin: 0;
-          padding: 20px;
+        padding: 20px 12px 40px;
       }
-      .container {
-          max-width: 800px;
-          margin: 0 auto;
-          background-color: #fff;
-          padding: 20px;
-          border: 2px solid #4C0000;
-          border-radius: 8px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+      .card-header {
+        padding: 32px 28px 28px;
       }
-      h1 {
-          color: #4C0000;
-          text-align: center;
+
+      .card-header h1 {
+        font-size: 21px;
       }
-      p, a {
-          font-size: 16px;
-          line-height: 1.6;
+
+      .card-body {
+        padding: 32px 28px 40px;
       }
-      a {
-          color: #4C0000;
-          text-decoration: none;
+
+      #success-view {
+        padding: 52px 28px;
       }
-      a:hover {
-          text-decoration: underline;
-      }
-      label {
-          display: block;
-          margin: 10px 0 5px;
-          color: #4C0000;
-      }
-      input[type="text"], input[type="email"], select, textarea {
-          width: calc(100% - 20px); /* Reduced width for 10px gap on each side */
-          padding: 8px;
-          margin: 0 10px 15px 10px; /* Added left/right margins */
-          border: 1px solid #4C0000;
-          border-radius: 4px;
-          font-family: 'Cinzel', serif;
-          box-sizing: border-box; /* Ensures padding/border don't increase width */
-          }
-           .topic-group {
-               margin: 0 10px 20px 10px; /* Added margins to align with inputs */
-           }
-           .topic-group label {
-               margin-right: 15px;
-           }
-           input[type="radio"] {
-               margin-right: 5px;
-           }
-           button {
-               background-color: #4C0000;
-               color: #fff;
-               padding: 10px 20px;
-               border: none;
-               border-radius: 4px;
-               font-family: 'Cinzel', serif;
-               font-size: 16px;
-               cursor: pointer;
-               margin: 0 10px; /* Align with inputs */
-           }
-           button:hover {
-               background-color: #6B0000;
-           }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Mute Points Debate Participant Registration Form</h1>
-      <p>By filling out this form, you'll register your interest in participating in debates on our YouTube channel. Additionally, you can select topics that you're passionate about or interested in debating. Your input will help us find a suitable debate partner for you.</p>
-      <p>If you haven't seen it already, here's an example of how the debate works: <a href="https://www.youtube.com/watch?v=QilFvCRjM1o" target="_blank" rel="noopener">Watch here</a></p>
-      <form action="https://formspree.io/f/mnnblnze" method="POST">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required>
-	
-        <label for="timezone">Timezone:</label>
-        <select id="timezone" name="timezone" required>
-          <option value="" disabled selected>Select your timezone</option>
-          <option value="PST">Pacific Standard Time (PST)</option>
-          <option value="MST">Mountain Standard Time (MST)</option>
-          <option value="CST">Central Standard Time (CST)</option>
-          <option value="EST">Eastern Standard Time (EST)</option>
-          <option value="GMT">Greenwich Mean Time (GMT)</option>
-          <option value="UTC">Coordinated Universal Time (UTC)</option>
-          <option value="CET">Central European Time (CET)</option>
-          <option value="IST">Indian Standard Time (IST)</option>
-          <option value="JST">Japan Standard Time (JST)</option>
-          <option value="AEST">Australian Eastern Standard Time (AEST)</option>
-          <option value="SGT">Singapore Time (SGT)</option>
-          <option value="BRT">Brasilia Time (BRT)</option>
-        </select>
-	
-        <label for="email">Email Address:</label>
-        <input type="email" id="email" name="email" required>
-	
-        <p>Here are some suggestions for debate topics. Are you interested in debating any of the following? Please indicate which side you would be on.</p>
-	
-	<div class="topic-group">
-	  <label>Is climate change a global emergency?</label>
-	  <input type="radio" name="climate" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="climate" value="Yes"> Yes
-	  <input type="radio" name="climate" value="No"> No
-	  <input type="radio" name="climate" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should social media be regulated?</label>
-	  <input type="radio" name="socialmedia" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="socialmedia" value="Yes"> Yes
-	  <input type="radio" name="socialmedia" value="No"> No
-	  <input type="radio" name="socialmedia" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Is universal basic income a good idea?</label>
-	  <input type="radio" name="ubi" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="ubi" value="Yes"> Yes
-	  <input type="radio" name="ubi" value="No"> No
-	  <input type="radio" name="ubi" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should animal testing be banned?</label>
-	  <input type="radio" name="animaltesting" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="animaltesting" value="Yes"> Yes
-	  <input type="radio" name="animaltesting" value="No"> No
-	  <input type="radio" name="animaltesting" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Is the Earth flat?</label>
-	  <input type="radio" name="flatearth" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="flatearth" value="Yes"> Yes
-	  <input type="radio" name="flatearth" value="No"> No
-	  <input type="radio" name="flatearth" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should race-based reparations be implemented?</label>
-	  <input type="radio" name="reparations" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="reparations" value="Yes"> Yes
-	  <input type="radio" name="reparations" value="No"> No
-	  <input type="radio" name="reparations" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Is racism primarily a systemic issue?</label>
-	  <input type="radio" name="racism" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="racism" value="Yes"> Yes
-	  <input type="radio" name="racism" value="No"> No
-	  <input type="radio" name="racism" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should people become vegetarian?</label>
-	  <input type="radio" name="vegetarian" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="vegetarian" value="Yes"> Yes
-	  <input type="radio" name="vegetarian" value="No"> No
-	  <input type="radio" name="vegetarian" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should gun control laws be stricter?</label>
-	  <input type="radio" name="guncontrol" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="guncontrol" value="Yes"> Yes
-	  <input type="radio" name="guncontrol" value="No"> No
-	  <input type="radio" name="guncontrol" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should the death penalty be abolished?</label>
-	  <input type="radio" name="deathpenalty" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="deathpenalty" value="Yes"> Yes
-	  <input type="radio" name="deathpenalty" value="No"> No
-	  <input type="radio" name="deathpenalty" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should college be free?</label>
-	  <input type="radio" name="collegefree" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="collegefree" value="Yes"> Yes
-	  <input type="radio" name="collegefree" value="No"> No
-	  <input type="radio" name="collegefree" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Is capitalism the best economic system?</label>
-	  <input type="radio" name="capitalism" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="capitalism" value="Yes"> Yes
-	  <input type="radio" name="capitalism" value="No"> No
-	  <input type="radio" name="capitalism" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should immigration laws be more strict?</label>
-	  <input type="radio" name="immigration" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="immigration" value="Yes"> Yes
-	  <input type="radio" name="immigration" value="No"> No
-	  <input type="radio" name="immigration" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should healthcare be universal?</label>
-	  <input type="radio" name="healthcare" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="healthcare" value="Yes"> Yes
-	  <input type="radio" name="healthcare" value="No"> No
-	  <input type="radio" name="healthcare" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should artificial intelligence be regulated?</label>
-	  <input type="radio" name="ai" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="ai" value="Yes"> Yes
-	  <input type="radio" name="ai" value="No"> No
-	  <input type="radio" name="ai" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should space exploration be prioritized over Earth issues?</label>
-	  <input type="radio" name="space" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="space" value="Yes"> Yes
-	  <input type="radio" name="space" value="No"> No
-	  <input type="radio" name="space" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should vaccines be mandatory?</label>
-	  <input type="radio" name="vaccines" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="vaccines" value="Yes"> Yes
-	  <input type="radio" name="vaccines" value="No"> No
-	  <input type="radio" name="vaccines" value="It's Complicated"> It's Complicated
-	</div>
-	
-	<div class="topic-group">
-	  <label>Should drug use be legalized?</label>
-	  <input type="radio" name="drugs" value="Not Interested" checked> Not Interested
-	  <input type="radio" name="drugs" value="Yes"> Yes
-	  <input type="radio" name="drugs" value="No"> No
-	  <input type="radio" name="drugs" value="It's Complicated"> It's Complicated
-	</div>
-	
-        <label for="other-topics">Other debate topics I'm interested in:</label>
-        <textarea id="other-topics" name="other-topics" rows="4"></textarea>
-	
-        <label for="notes">Any other notes?</label>
-        <textarea id="notes" name="notes" rows="4"></textarea>
-	
-        <button type="submit">Submit</button>
+    }
+
+    .required-note {
+      font-size: 14px;
+      font-weight: 300;
+      color: #999;
+      margin-bottom: 28px;
+    }
+
+    .opponent-question {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #4C0000;
+      margin-bottom: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Header -->
+  <div class="card-header">
+    <p class="brand-label">Mute Points</p>
+    <h1>Debate Participant Registration</h1>
+    <p class="intro">Register your interest in debating on the Mute Points YouTube channel. We'll be in touch when we find a good match for you. <a href="https://www.youtube.com/watch?v=QilFvCRjM1o" target="_blank" rel="noopener">Watch an example debate.</a></p>
+  </div>
+
+  <!-- Body -->
+  <div class="card-body">
+
+    <!-- Form view -->
+    <div id="form-view">
+      <form id="registration-form" novalidate>
+
+        <p class="required-note">Fields marked * are required.</p>
+
+        <!-- ── Section 1: Your details ── -->
+        <div class="form-section">
+          <h2 class="section-heading">Your details</h2>
+
+          <div class="field" id="field-name">
+            <label class="field-label" for="name">Name *</label>
+            <input type="text" id="name" name="name" autocomplete="name" required>
+            <span class="field-error">Please enter your name.</span>
+          </div>
+
+          <div class="field" id="field-email">
+            <label class="field-label" for="email">Email address *</label>
+            <input type="email" id="email" name="email" autocomplete="email" required>
+            <span class="field-error">Please enter a valid email address.</span>
+          </div>
+
+          <div class="field" id="field-timezone">
+            <label class="field-label" for="timezone">Time zone *</label>
+            <select id="timezone" name="timezone" required>
+              <option value="" disabled selected>Select your time zone</option>
+              <option value="PST">Pacific Standard Time (PST)</option>
+              <option value="MST">Mountain Standard Time (MST)</option>
+              <option value="CST">Central Standard Time (CST)</option>
+              <option value="EST">Eastern Standard Time (EST)</option>
+              <option value="GMT">Greenwich Mean Time (GMT)</option>
+              <option value="UTC">Coordinated Universal Time (UTC)</option>
+              <option value="CET">Central European Time (CET)</option>
+              <option value="IST">Indian Standard Time (IST)</option>
+              <option value="JST">Japan Standard Time (JST)</option>
+              <option value="AEST">Australian Eastern Standard Time (AEST)</option>
+              <option value="SGT">Singapore Time (SGT)</option>
+              <option value="BRT">Brasilia Time (BRT)</option>
+            </select>
+            <span class="field-error">Please select your time zone.</span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <!-- ── Section 2: Subject areas ── -->
+        <div class="form-section">
+          <h2 class="section-heading">What would you like to debate?</h2>
+          <p style="font-size:15px;font-weight:300;color:#666;margin-bottom:20px;line-height:1.6;">Select as many subject areas as you like.</p>
+
+          <div class="checkbox-grid">
+            <label class="check-label">
+              <input type="checkbox" data-subject="Politics">
+              <span class="check-text">Politics</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Economics">
+              <span class="check-text">Economics</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Religion">
+              <span class="check-text">Religion</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Philosophy &amp; ethics">
+              <span class="check-text">Philosophy &amp; ethics</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Science &amp; technology">
+              <span class="check-text">Science &amp; technology</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Social issues">
+              <span class="check-text">Social issues</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Gender &amp; relationships">
+              <span class="check-text">Gender &amp; relationships</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="History">
+              <span class="check-text">History</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Environment">
+              <span class="check-text">Environment</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="International affairs">
+              <span class="check-text">International affairs</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Law &amp; justice">
+              <span class="check-text">Law &amp; justice</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" data-subject="Culture &amp; media">
+              <span class="check-text">Culture &amp; media</span>
+            </label>
+            <label class="check-label">
+              <input type="checkbox" id="other-subject-check" data-subject="Other">
+              <span class="check-text">Other</span>
+            </label>
+          </div>
+
+          <!-- Conditional: Other subject text -->
+          <div class="conditional" id="other-subject-reveal">
+            <div class="field" style="margin-top:4px">
+              <label class="field-label" for="subject-other-text">Please specify</label>
+              <input type="text" id="subject-other-text" placeholder="e.g. Sport, Architecture, …">
+            </div>
+          </div>
+
+          <!-- Hidden field that carries the final subjects string to Formspree -->
+          <input type="hidden" name="subjects" id="subjects-field">
+        </div>
+
+        <hr class="divider">
+
+        <!-- ── Section 3: Suggest a debate ── -->
+        <div class="form-section">
+          <h2 class="section-heading">Have a particular debate in mind?</h2>
+
+          <div class="field">
+            <label class="field-label" for="debate-question">What would you like to debate?</label>
+            <span class="hint">Suggest a debate question and, if you like, tell us which side you'd argue.</span>
+            <textarea id="debate-question" name="debate_question" rows="3" placeholder="e.g. &quot;Is the death penalty justified? I'd argue against it.&quot;"></textarea>
+          </div>
+
+          <!-- Conditional: opponent preference -->
+          <div class="conditional" id="opponent-section">
+            <p class="opponent-question">Do you already have someone in mind to debate?</p>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="opponent_preference" value="Yes, I have someone in mind.">
+                <span class="radio-text">Yes, I have someone in mind.</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="opponent_preference" value="No, I'd like Mute Points to find an opponent.">
+                <span class="radio-text">No, I'd like Mute Points to find an opponent.</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="opponent_preference" value="I'm not sure yet.">
+                <span class="radio-text">I'm not sure yet.</span>
+              </label>
+            </div>
+
+            <!-- Conditional: opponent details -->
+            <div class="conditional" id="opponent-details">
+              <div class="field">
+                <label class="field-label" for="opponent-name">Who would you like to debate?</label>
+                <span class="hint">You can provide their name, social media profile or contact details.</span>
+                <input type="text" id="opponent-name" name="opponent_name" placeholder="Name, Twitter / X handle, website, etc.">
+              </div>
+              <div class="field">
+                <label class="check-label" style="align-items:flex-start;gap:10px">
+                  <input type="checkbox" name="opponent_spoken" value="Yes" style="margin-top:2px">
+                  <span class="check-text">I've already spoken to this person and they're interested in participating.</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="submit-row">
+          <button type="submit" id="submit-btn">Register</button>
+          <div class="error-banner" id="error-banner">
+            Something went wrong — please try again. If the problem persists, contact us directly.
+          </div>
+        </div>
+
       </form>
     </div>
-  </body>
+
+    <!-- Success view -->
+    <div id="success-view">
+      <div class="success-mark">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h2>You're registered!</h2>
+      <p>Thank you for registering with Mute Points. We'll be in touch when we find a good match for you.</p>
+    </div>
+
+  </div><!-- .card-body -->
+</div><!-- .card -->
+
+<script>
+  const form       = document.getElementById('registration-form');
+  const submitBtn  = document.getElementById('submit-btn');
+  const errorBanner = document.getElementById('error-banner');
+
+  const debateField       = document.getElementById('debate-question');
+  const opponentSection   = document.getElementById('opponent-section');
+  const opponentRadios    = form.querySelectorAll('input[name="opponent_preference"]');
+  const opponentDetails   = document.getElementById('opponent-details');
+  const opponentNameInput = document.getElementById('opponent-name');
+  const opponentSpokenBox = form.querySelector('input[name="opponent_spoken"]');
+
+  const otherSubjectCheck  = document.getElementById('other-subject-check');
+  const otherSubjectReveal = document.getElementById('other-subject-reveal');
+  const otherSubjectText   = document.getElementById('subject-other-text');
+  const subjectsField      = document.getElementById('subjects-field');
+
+  // ── Conditional: Other subject ──────────────────────────
+  otherSubjectCheck.addEventListener('change', function () {
+    toggleConditional(otherSubjectReveal, this.checked);
+    if (!this.checked) otherSubjectText.value = '';
+  });
+
+  // ── Conditional: Opponent section ───────────────────────
+  debateField.addEventListener('input', function () {
+    const hasContent = this.value.trim().length > 0;
+    toggleConditional(opponentSection, hasContent);
+    if (!hasContent) {
+      opponentRadios.forEach(r => { r.checked = false; });
+      toggleConditional(opponentDetails, false);
+      opponentNameInput.value = '';
+      opponentSpokenBox.checked = false;
+    }
+  });
+
+  // ── Conditional: Opponent details ───────────────────────
+  opponentRadios.forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      const showDetails = this.value === 'Yes, I have someone in mind.';
+      toggleConditional(opponentDetails, showDetails);
+      if (!showDetails) {
+        opponentNameInput.value = '';
+        opponentSpokenBox.checked = false;
+      }
+    });
+  });
+
+  // ── Smooth toggle helper ─────────────────────────────────
+  function toggleConditional(el, show) {
+    if (show) {
+      el.classList.add('visible');
+    } else {
+      el.classList.remove('visible');
+    }
+  }
+
+  // ── Validation ───────────────────────────────────────────
+  function validateForm() {
+    let valid = true;
+
+    const name  = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const tz    = document.getElementById('timezone').value;
+
+    setError('field-name',     !name);
+    setError('field-email',    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+    setError('field-timezone', !tz);
+
+    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !tz) valid = false;
+    return valid;
+  }
+
+  function setError(fieldId, hasError) {
+    document.getElementById(fieldId).classList.toggle('has-error', hasError);
+  }
+
+  // Clear errors on input
+  document.getElementById('name').addEventListener('input',    () => setError('field-name', false));
+  document.getElementById('email').addEventListener('input',   () => setError('field-email', false));
+  document.getElementById('timezone').addEventListener('change', () => setError('field-timezone', false));
+
+  // ── Build subjects string ────────────────────────────────
+  function buildSubjects() {
+    const checked = Array.from(
+      document.querySelectorAll('[data-subject]:checked')
+    ).map(function (cb) {
+      const subject = cb.dataset.subject;
+      if (subject === 'Other') {
+        const spec = otherSubjectText.value.trim();
+        return spec ? 'Other: ' + spec : 'Other';
+      }
+      return subject;
+    });
+    return checked.join(', ');
+  }
+
+  // ── Submission ───────────────────────────────────────────
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    // Populate the subjects hidden field
+    subjectsField.value = buildSubjects();
+
+    // Wipe hidden/irrelevant fields so they don't submit stale data
+    if (!opponentSection.classList.contains('visible')) {
+      opponentRadios.forEach(r => { r.checked = false; });
+      opponentNameInput.value = '';
+      opponentSpokenBox.checked = false;
+    }
+    if (!opponentDetails.classList.contains('visible')) {
+      opponentNameInput.value = '';
+      opponentSpokenBox.checked = false;
+    }
+    if (!otherSubjectReveal.classList.contains('visible')) {
+      otherSubjectText.value = '';
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+    errorBanner.classList.remove('visible');
+
+    const data = new FormData(form);
+
+    try {
+      const response = await fetch('https://formspree.io/f/mnnblnze', {
+        method: 'POST',
+        body: data,
+        headers: { Accept: 'application/json' }
+      });
+
+      if (response.ok) {
+        document.getElementById('form-view').style.display = 'none';
+        document.getElementById('success-view').classList.add('visible');
+      } else {
+        throw new Error('non-ok response');
+      }
+    } catch (err) {
+      errorBanner.classList.add('visible');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Register';
+    }
+  });
+</script>
+
+</body>
 </html>

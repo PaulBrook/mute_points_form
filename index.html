@@ -525,55 +525,55 @@
 
           <div class="checkbox-grid">
             <label class="check-label">
-              <input type="checkbox" data-subject="Politics">
+              <input type="checkbox" name="subject_politics" value="Yes" data-subject="Politics">
               <span class="check-text">Politics</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Economics">
+              <input type="checkbox" name="subject_economics" value="Yes" data-subject="Economics">
               <span class="check-text">Economics</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Religion">
+              <input type="checkbox" name="subject_religion" value="Yes" data-subject="Religion">
               <span class="check-text">Religion</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Philosophy &amp; ethics">
+              <input type="checkbox" name="subject_philosophy" value="Yes" data-subject="Philosophy &amp; ethics">
               <span class="check-text">Philosophy &amp; ethics</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Science &amp; technology">
+              <input type="checkbox" name="subject_science" value="Yes" data-subject="Science &amp; technology">
               <span class="check-text">Science &amp; technology</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Social issues">
+              <input type="checkbox" name="subject_social" value="Yes" data-subject="Social issues">
               <span class="check-text">Social issues</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Gender &amp; relationships">
+              <input type="checkbox" name="subject_gender" value="Yes" data-subject="Gender &amp; relationships">
               <span class="check-text">Gender &amp; relationships</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="History">
+              <input type="checkbox" name="subject_history" value="Yes" data-subject="History">
               <span class="check-text">History</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Environment">
+              <input type="checkbox" name="subject_environment" value="Yes" data-subject="Environment">
               <span class="check-text">Environment</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="International affairs">
+              <input type="checkbox" name="subject_international" value="Yes" data-subject="International affairs">
               <span class="check-text">International affairs</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Law &amp; justice">
+              <input type="checkbox" name="subject_law" value="Yes" data-subject="Law &amp; justice">
               <span class="check-text">Law &amp; justice</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" data-subject="Culture &amp; media">
+              <input type="checkbox" name="subject_culture" value="Yes" data-subject="Culture &amp; media">
               <span class="check-text">Culture &amp; media</span>
             </label>
             <label class="check-label">
-              <input type="checkbox" id="other-subject-check" data-subject="Other">
+              <input type="checkbox" id="other-subject-check" name="subject_other" value="Yes" data-subject="Other">
               <span class="check-text">Other</span>
             </label>
           </div>
@@ -582,12 +582,9 @@
           <div class="conditional" id="other-subject-reveal">
             <div class="field" style="margin-top:4px">
               <label class="field-label" for="subject-other-text">Please specify</label>
-              <input type="text" id="subject-other-text" placeholder="e.g. Sport, Architecture, …">
+              <input type="text" id="subject-other-text" name="subject_other_specify" placeholder="e.g. Sport, Architecture, …">
             </div>
           </div>
-
-          <!-- Hidden field that carries the final subjects string to Formspree -->
-          <input type="hidden" name="subjects" id="subjects-field">
         </div>
 
         <hr class="divider">
@@ -675,7 +672,6 @@
   const otherSubjectCheck  = document.getElementById('other-subject-check');
   const otherSubjectReveal = document.getElementById('other-subject-reveal');
   const otherSubjectText   = document.getElementById('subject-other-text');
-  const subjectsField      = document.getElementById('subjects-field');
 
   // ── Conditional: Other subject ──────────────────────────
   otherSubjectCheck.addEventListener('change', function () {
@@ -741,29 +737,11 @@
   document.getElementById('email').addEventListener('input',   () => setError('field-email', false));
   document.getElementById('timezone').addEventListener('change', () => setError('field-timezone', false));
 
-  // ── Build subjects string ────────────────────────────────
-  function buildSubjects() {
-    const checked = Array.from(
-      document.querySelectorAll('[data-subject]:checked')
-    ).map(function (cb) {
-      const subject = cb.dataset.subject;
-      if (subject === 'Other') {
-        const spec = otherSubjectText.value.trim();
-        return spec ? 'Other: ' + spec : 'Other';
-      }
-      return subject;
-    });
-    return checked.join(', ');
-  }
-
   // ── Submission ───────────────────────────────────────────
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     if (!validateForm()) return;
-
-    // Populate the subjects hidden field
-    subjectsField.value = buildSubjects();
 
     // Wipe hidden/irrelevant fields so they don't submit stale data
     if (!opponentSection.classList.contains('visible')) {

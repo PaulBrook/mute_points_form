@@ -172,8 +172,10 @@
     @media (max-width: 540px) {
       .matchup {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto;
       }
+      .matchup > *:first-child { grid-row: 1; }
+      .vs-col                  { grid-row: 2; }
+      .matchup > *:last-child  { grid-row: 3; }
       .card-top {
         flex-direction: column;
         gap: 10px;

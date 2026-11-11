@@ -788,7 +788,7 @@
   <p class="brand-label"><a href="https://youtube.com/@mutepoints" target="_blank" rel="noopener">Mute Points</a></p>
   <h1>Debate Matching</h1>
   <p class="intro">Issue a public debate challenge. Someone who disagrees accepts it. We arrange the debate on the <a href="https://youtube.com/@mutepoints" target="_blank" rel="noopener">Mute Points YouTube channel</a>. Simple as that.</p>
-  <button class="btn-primary" id="open-create-btn">Post a Debate Challenge</button>
+  <button class="btn-primary" id="open-create-btn">Post a New Debate Challenge</button>
 </header>
 
 <!-- ── Notification banner (shown after email verification) ──────────────── -->
@@ -812,7 +812,7 @@
     <button class="modal-close" aria-label="Close" data-close="create-modal">×</button>
 
     <div class="modal-head">
-      <h2 id="create-modal-title">Post a Debate Challenge</h2>
+      <h2 id="create-modal-title">Post a New Debate Challenge</h2>
       <p class="modal-sub">Define the proposition, pick your side, and wait for an opponent.</p>
     </div>
 
@@ -1135,7 +1135,7 @@ async function loadChallenges() {
         <div class="empty-state">
           <h2>No challenges yet</h2>
           <p>Be the first to issue a debate challenge.<br>Define a proposition, pick your side, and find an opponent.</p>
-          <button class="btn-primary" id="empty-create-btn">Post a Debate Challenge</button>
+          <button class="btn-primary" id="empty-create-btn">Post a New Debate Challenge</button>
         </div>`;
       document.getElementById('empty-create-btn')?.addEventListener('click', () => openModal('create-modal'));
       return;

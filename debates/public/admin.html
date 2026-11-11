@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mute Points — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,300;0,400;0,600;0,700;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Josefin Sans', sans-serif;
+      background: #f5efef;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: #4C0000;
+      color: #fff;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .topbar-brand .brand {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+
+    .topbar-brand h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .topbar a {
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      font-weight: 400;
+      text-decoration: none;
+    }
+
+    .topbar a:hover { color: #fff; }
+
+    /* ── Main content ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 24px 72px;
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 6px;
+      padding: 20px 20px 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+
+    .stat-num {
+      font-size: 28px;
+      font-weight: 700;
+      color: #4C0000;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #999;
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 7px 18px;
+      border: 1.5px solid #d0b0b0;
+      border-radius: 20px;
+      background: #fff;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      border-color: #4C0000;
+      background: #4C0000;
+      color: #fff;
+    }
+
+    /* ── Challenge cards ── */
+    .admin-card {
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .admin-card.status-deleted { opacity: 0.5; }
+
+    .admin-card-top {
+      padding: 16px 20px 14px;
+      border-bottom: 1px solid #f5eaea;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .admin-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.35;
+      flex: 1;
+    }
+
+    .status-badge {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .status-badge.pending { background: #fff8e1; color: #c07000; }
+    .status-badge.open    { background: #e8f5e9; color: #1f7a45; }
+    .status-badge.matched { background: #e3f2fd; color: #1565c0; }
+    .status-badge.closed  { background: #f5f5f5; color: #888; }
+    .status-badge.deleted { background: #fff0f0; color: #c00000; }
+
+    /* ── Participant grid ── */
+    .admin-participants {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    @media (max-width: 600px) { .admin-participants { grid-template-columns: 1fr; } }
+
+    .admin-slot {
+      padding: 14px 20px 12px;
+      border-right: 1px solid #f5eaea;
+    }
+
+    .admin-slot:last-child { border-right: none; }
+
+    .admin-slot-pos {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #4C0000;
+      margin-bottom: 6px;
+    }
+
+    .admin-slot-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .admin-slot-email {
+      font-size: 13px;
+      font-weight: 400;
+      color: #666;
+      word-break: break-all;
+      margin-bottom: 4px;
+    }
+
+    .admin-slot-email a {
+      color: #4C0000;
+      text-decoration: none;
+    }
+
+    .admin-slot-email a:hover { text-decoration: underline; }
+
+    .admin-slot-links {
+      list-style: none;
+      margin-top: 4px;
+    }
+
+    .admin-slot-links a {
+      font-size: 12px;
+      color: #4C0000;
+      text-decoration: none;
+      opacity: 0.75;
+    }
+
+    .admin-slot-links a:hover { opacity: 1; text-decoration: underline; }
+
+    .admin-slot.vacant {
+      background: #fdf8f8;
+      color: #bbb;
+      font-size: 13px;
+      font-weight: 300;
+      font-style: italic;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* ── Actions footer ── */
+    .admin-actions {
+      padding: 10px 20px;
+      border-top: 1px solid #f5eaea;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: #fdfafa;
+    }
+
+    .admin-date {
+      font-size: 12px;
+      font-weight: 300;
+      color: #bbb;
+      font-style: italic;
+      flex: 1;
+    }
+
+    .action-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 3px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .action-btn.close-btn  { background: #f5eaea; color: #4C0000; }
+    .action-btn.close-btn:hover  { background: #ead4d4; }
+    .action-btn.reopen-btn { background: #e8f5e9; color: #1f7a45; }
+    .action-btn.reopen-btn:hover { background: #c8e6c9; }
+    .action-btn.delete-btn { background: #fff0f0; color: #c00000; }
+    .action-btn.delete-btn:hover { background: #ffe0e0; }
+
+    /* ── Pending notice ── */
+    .pending-notice {
+      font-size: 12px;
+      font-weight: 400;
+      color: #c07000;
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 3px;
+      padding: 2px 8px;
+      margin-left: 8px;
+    }
+
+    /* ── Verified debaters section ── */
+    .section-heading {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: #4C0000;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #4C0000;
+      margin: 48px 0 20px;
+    }
+
+    .vd-add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .vd-add-row input {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 1.5px solid #d0b0b0;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .vd-add-row input:focus { border-color: #4C0000; }
+    .vd-add-row input[name="vd-name"] { flex: 1; min-width: 140px; }
+    .vd-add-row input[name="vd-email"] { flex: 2; min-width: 200px; }
+
+    .vd-add-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      background: #4C0000;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .vd-add-btn:hover { background: #6B0000; }
+
+    .vd-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .vd-table th { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #999; padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; }
+    .vd-table td { padding: 10px 12px; border-bottom: 1px solid #f5f5f5; }
+    .vd-table tr:last-child td { border-bottom: none; }
+
+    .vd-remove-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      background: #fff0f0;
+      color: #c00000;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .vd-remove-btn:hover { background: #ffe0e0; }
+
+    /* ── Loading / empty ── */
+    .admin-info {
+      text-align: center;
+      padding: 60px 20px;
+      color: #bbb;
+      font-size: 15px;
+      font-weight: 300;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="brand">Mute Points</span>
+    <h1>Admin</h1>
+  </div>
+  <a href="/">← Back to noticeboard</a>
+</div>
+
+<div class="main">
+
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="stat-num" id="stat-pending">—</div><div class="stat-label">Pending</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-open">—</div><div class="stat-label">Open</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-matched">—</div><div class="stat-label">Matched</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-closed">—</div><div class="stat-label">Closed</div></div>
+    <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="pending">Pending</button>
+    <button class="filter-btn" data-filter="open">Open</button>
+    <button class="filter-btn" data-filter="matched">Matched</button>
+    <button class="filter-btn" data-filter="closed">Closed</button>
+    <button class="filter-btn" data-filter="deleted">Deleted</button>
+  </div>
+
+  <div id="challenges-list">
+    <div class="admin-info">Loading…</div>
+  </div>
+
+  <!-- ── Verified debaters ── -->
+  <h2 class="section-heading">Verified Mute Points Debaters</h2>
+  <p style="font-size:14px;font-weight:300;color:#666;margin-bottom:20px;line-height:1.6;">
+    People marked here get a "Verified debater" badge on their challenge cards.
+  </p>
+  <div class="vd-add-row">
+    <input type="text"  name="vd-name"  placeholder="Display name" id="vd-name">
+    <input type="email" name="vd-email" placeholder="Email address" id="vd-email">
+    <button class="vd-add-btn" id="vd-add-btn">Add</button>
+  </div>
+  <div id="vd-list"><div class="admin-info" style="padding:20px 0">Loading…</div></div>
+
+</div>
+
+<script>
+let allChallenges = [];
+let currentFilter = 'all';
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function fmt(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr + 'Z').toLocaleString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function renderSlot(posLabel, name, email, links, isVacant) {
+  if (isVacant) {
+    return `<div class="admin-slot vacant"><div class="admin-slot-pos">${esc(posLabel)}</div>Seeking opponent</div>`;
+  }
+  const linksHtml = (links || []).map(l =>
+    `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label || l.url)} ↗</a></li>`
+  ).join('');
+  return `
+    <div class="admin-slot">
+      <div class="admin-slot-pos">${esc(posLabel)}</div>
+      <div class="admin-slot-name">${esc(name)}</div>
+      <div class="admin-slot-email"><a href="mailto:${esc(email)}">${esc(email)}</a></div>
+      ${linksHtml ? `<ul class="admin-slot-links">${linksHtml}</ul>` : ''}
+    </div>`;
+}
+
+function renderCard(c) {
+  const challengerInA = c.challenger_position === 'A';
+
+  const slotAName   = challengerInA ? c.challenger_name : (c.acceptor_name || null);
+  const slotAEmail  = challengerInA ? c.challenger_email : (c.acceptor_email || '');
+  const slotALinks  = challengerInA ? c.challenger_links : c.acceptor_links;
+  const slotBName   = challengerInA ? (c.acceptor_name || null) : c.challenger_name;
+  const slotBEmail  = challengerInA ? (c.acceptor_email || '') : c.challenger_email;
+  const slotBLinks  = challengerInA ? c.acceptor_links : c.challenger_links;
+
+  const slotA = renderSlot(c.position_a, slotAName, slotAEmail, slotALinks, !slotAName);
+  const slotB = renderSlot(c.position_b, slotBName, slotBEmail, slotBLinks, !slotBName);
+
+  let actions = '';
+  if (c.status === 'pending')  actions = `<button class="action-btn reopen-btn" data-id="${c.id}" data-action="open">Publish</button>`;
+  if (c.status === 'open')     actions = `<button class="action-btn close-btn"  data-id="${c.id}" data-action="closed">Close</button>`;
+  if (c.status === 'matched')  actions = `<button class="action-btn close-btn"  data-id="${c.id}" data-action="closed">Close</button>`;
+  if (c.status === 'closed')   actions = `<button class="action-btn reopen-btn" data-id="${c.id}" data-action="open">Reopen</button>`;
+  if (c.status !== 'deleted') {
+    actions += ` <button class="action-btn delete-btn" data-id="${c.id}" data-action="deleted">Delete</button>`;
+  }
+
+  const pendingAcceptance = c.pending_name
+    ? `<br><span class="pending-notice">Pending acceptance: ${esc(c.pending_name)} — expires ${fmt(c.pending_expires)}</span>`
+    : '';
+  const matchedLine = c.accepted_at ? `<br>Matched: ${fmt(c.accepted_at)}` : '';
+
+  return `
+    <div class="admin-card status-${esc(c.status)}" data-id="${c.id}">
+      <div class="admin-card-top">
+        <div class="admin-card-title">${esc(c.title)}</div>
+        <span class="status-badge ${esc(c.status)}">${esc(c.status)}</span>
+      </div>
+      <div class="admin-participants">
+        ${slotA}
+        ${slotB}
+      </div>
+      <div class="admin-actions">
+        <div class="admin-date">Posted: ${fmt(c.created_at)}${matchedLine}${pendingAcceptance}</div>
+        ${actions}
+      </div>
+    </div>`;
+}
+
+function applyFilter() {
+  const list = document.getElementById('challenges-list');
+  const filtered = currentFilter === 'all'
+    ? allChallenges
+    : allChallenges.filter(c => c.status === currentFilter);
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="admin-info">No challenges with status "${currentFilter}".</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(renderCard).join('');
+
+  list.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => setStatus(btn.dataset.id, btn.dataset.action));
+  });
+}
+
+async function loadChallenges() {
+  try {
+    const res = await fetch('/admin/api/challenges');
+    if (res.status === 401) {
+      document.getElementById('challenges-list').innerHTML =
+        '<div class="admin-info">Not authorised.</div>';
+      return;
+    }
+    allChallenges = await res.json();
+
+    const counts = { pending: 0, open: 0, matched: 0, closed: 0, deleted: 0 };
+    allChallenges.forEach(c => { if (counts[c.status] !== undefined) counts[c.status]++; });
+    document.getElementById('stat-pending').textContent = counts.pending;
+    document.getElementById('stat-open').textContent    = counts.open;
+    document.getElementById('stat-matched').textContent = counts.matched;
+    document.getElementById('stat-closed').textContent  = counts.closed;
+    document.getElementById('stat-total').textContent   = allChallenges.filter(c => c.status !== 'deleted').length;
+
+    applyFilter();
+  } catch (err) {
+    document.getElementById('challenges-list').innerHTML =
+      '<div class="admin-info">Failed to load challenges.</div>';
+  }
+}
+
+async function setStatus(id, status) {
+  const confirmMsg = status === 'deleted' ? 'Delete this challenge?' : null;
+  if (confirmMsg && !confirm(confirmMsg)) return;
+
+  try {
+    const res = await fetch(`/admin/api/challenges/${id}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error('Failed');
+    await loadChallenges();
+  } catch {
+    alert('Action failed. Please try again.');
+  }
+}
+
+// ── Verified debaters ──────────────────────────────────────────
+
+async function loadVerifiedDebaters() {
+  const listEl = document.getElementById('vd-list');
+  try {
+    const res = await fetch('/admin/api/verified-debaters');
+    if (!res.ok) throw new Error();
+    const debaters = await res.json();
+
+    if (!debaters.length) {
+      listEl.innerHTML = '<div class="admin-info" style="padding:20px 0">No verified debaters yet.</div>';
+      return;
+    }
+
+    listEl.innerHTML = `
+      <table class="vd-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Added</th><th></th></tr></thead>
+        <tbody>
+          ${debaters.map(d => `
+            <tr>
+              <td>${esc(d.name)}</td>
+              <td>${esc(d.email)}</td>
+              <td>${fmt(d.created_at)}</td>
+              <td><button class="vd-remove-btn" data-email="${esc(d.email)}">Remove</button></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+
+    listEl.querySelectorAll('.vd-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => removeVerifiedDebater(btn.dataset.email));
+    });
+  } catch {
+    listEl.innerHTML = '<div class="admin-info" style="padding:20px 0">Failed to load.</div>';
+  }
+}
+
+async function addVerifiedDebater() {
+  const nameEl  = document.getElementById('vd-name');
+  const emailEl = document.getElementById('vd-email');
+  const btn     = document.getElementById('vd-add-btn');
+  const name    = nameEl.value.trim();
+  const email   = emailEl.value.trim();
+
+  if (!name || !email) { alert('Please enter both a name and an email address.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  try {
+    const res = await fetch('/admin/api/verified-debaters', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed');
+    }
+    nameEl.value  = '';
+    emailEl.value = '';
+    await loadVerifiedDebaters();
+    await loadChallenges();
+  } catch (err) {
+    alert('Could not add debater: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Add';
+  }
+}
+
+async function removeVerifiedDebater(email) {
+  if (!confirm(`Remove verified status for ${email}?`)) return;
+  try {
+    const res = await fetch(`/admin/api/verified-debaters/${encodeURIComponent(email)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error();
+    await loadVerifiedDebaters();
+    await loadChallenges();
+  } catch {
+    alert('Could not remove debater. Please try again.');
+  }
+}
+
+// ── Wiring ──────────────────────────────────────────────────────
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    applyFilter();
+  });
+});
+
+document.getElementById('vd-add-btn').addEventListener('click', addVerifiedDebater);
+
+loadChallenges();
+loadVerifiedDebaters();
+</script>
+</body>
+</html>

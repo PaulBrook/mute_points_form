@@ -109,6 +109,12 @@ app.use((req, res, next) => {
   if (req.headers['x-forwarded-proto'] === 'http') {
     return res.redirect(301, `https://${req.headers.host}${req.url}`);
   }
+  res.set({
+    'X-Content-Type-Options':  'nosniff',
+    'X-Frame-Options':         'DENY',
+    'Referrer-Policy':         'strict-origin-when-cross-origin',
+    'Permissions-Policy':      'geolocation=(), camera=(), microphone=()',
+  });
   next();
 });
 

@@ -679,6 +679,14 @@ app.delete('/admin/api/verified-debaters/:email', requireAdmin, async (req, res)
 
 // ── Admin page ────────────────────────────────────────────────────────────────
 
+app.get('/admin/logout', (req, res) => {
+  const cookieHeader = req.headers.cookie || '';
+  const m = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
+  if (m) adminSessions.delete(m[1]);
+  res.clearCookie('admin_session', { path: '/admin' });
+  res.set('WWW-Authenticate', 'Basic realm="Mute Points Admin"').status(401).end('Logged out');
+});
+
 app.get('/admin', requireAdmin, (req, res) => {
   // Set a session cookie so fetch() calls from the admin page don't need to
   // re-send Basic Auth credentials (browsers often skip that for POST).

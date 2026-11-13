@@ -79,6 +79,21 @@ async function cleanup() {
 
 setInterval(() => cleanup().catch(console.error), 5 * 60 * 1000);
 
+// ── Admin sessions ────────────────────────────────────────────────────────────
+
+const adminSessions = new Map(); // token → expiry ms
+
+function createAdminSession() {
+  const token = randomUUID();
+  adminSessions.set(token, Date.now() + 24 * 60 * 60 * 1000);
+  return token;
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [t, exp] of adminSessions) if (exp < now) adminSessions.delete(t);
+}, 60 * 60 * 1000);
+
 // ── Email ─────────────────────────────────────────────────────────────────────
 
 const mailer = process.env.SMTP_HOST
@@ -138,6 +153,15 @@ const reportLimit = rateLimit({
 });
 
 function requireAdmin(req, res, next) {
+  // Accept session cookie (set after initial Basic Auth login)
+  const cookieHeader = req.headers.cookie || '';
+  const m = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
+  if (m) {
+    const exp = adminSessions.get(m[1]);
+    if (exp && exp > Date.now()) return next();
+  }
+
+  // Fall back to Basic Auth
   const header = req.headers.authorization || '';
   if (!header.startsWith('Basic ')) {
     return res.set('WWW-Authenticate', 'Basic realm="Mute Points Admin"').status(401).end('Unauthorized');
@@ -648,6 +672,17 @@ app.delete('/admin/api/verified-debaters/:email', requireAdmin, async (req, res)
 // ── Admin page ────────────────────────────────────────────────────────────────
 
 app.get('/admin', requireAdmin, (req, res) => {
+  // Set a session cookie so fetch() calls from the admin page don't need to
+  // re-send Basic Auth credentials (browsers often skip that for POST).
+  const token = createAdminSession();
+  const secure = SITE_URL.startsWith('https://');
+  res.cookie('admin_session', token, {
+    httpOnly: true,
+    sameSite: 'Strict',
+    secure,
+    path: '/admin',
+    maxAge: 24 * 60 * 60 * 1000,
+  });
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 

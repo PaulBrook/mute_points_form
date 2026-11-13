@@ -696,9 +696,8 @@ app.get('/admin/api/verified-debaters', requireAdmin, async (req, res) => {
 
 app.post('/admin/api/verified-debaters', requireAdmin, async (req, res) => {
   const email = parseEmail(req.body.email);
-  const name  = trimStr(req.body.name || req.body.display_name || '', 100);
+  const name  = trimStr(req.body.name || req.body.display_name || '', 100) || email;
   if (!email) return res.status(400).json({ error: 'Valid email required.' });
-  if (!name)  return res.status(400).json({ error: 'Display name required.' });
   try {
     await pool.query(
       `INSERT INTO verified_debaters (email, display_name)

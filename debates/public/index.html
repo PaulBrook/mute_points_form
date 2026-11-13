@@ -1188,7 +1188,11 @@ async function loadChallenges() {
 
     const open    = challenges.filter(c => c.status === 'open');
     const rest    = challenges.filter(c => c.status !== 'open');
-    let html = open.map(renderCard).join('');
+    let html = '';
+    if (open.length) {
+      html += `<p class="section-label">Looking for debaters</p>`;
+      html += open.map(renderCard).join('');
+    }
     if (rest.length) {
       html += `<p class="section-label">Recent matches</p>`;
       html += rest.map(renderCard).join('');

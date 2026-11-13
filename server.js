@@ -67,6 +67,12 @@ async function initSchema() {
       display_name TEXT NOT NULL,
       added_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    ALTER TABLE challenges ADD COLUMN IF NOT EXISTS admin_created BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE challenges ALTER COLUMN challenger_position DROP NOT NULL;
+    ALTER TABLE challenges DROP CONSTRAINT IF EXISTS challenges_challenger_position_check;
+    ALTER TABLE challenges ADD CONSTRAINT challenges_challenger_position_check CHECK(challenger_position IN ('A','B') OR challenger_position IS NULL);
+    ALTER TABLE pending_acceptances ADD COLUMN IF NOT EXISTS chosen_position TEXT CHECK(chosen_position IN ('A','B') OR chosen_position IS NULL);
   `);
   console.log('Schema ready.');
 }
@@ -262,7 +268,7 @@ app.get('/api/challenges', async (req, res) => {
     const { rows } = await pool.query(`
       SELECT
         c.id, c.title, c.position_a, c.position_b, c.challenger_position,
-        c.challenger_name, c.challenger_links, c.status, c.created_at,
+        c.challenger_name, c.challenger_links, c.status, c.created_at, c.admin_created,
         a.acceptor_name, a.acceptor_links, a.created_at AS accepted_at,
         CASE WHEN vd1.email IS NOT NULL THEN true ELSE false END AS challenger_verified,
         CASE WHEN vd2.email IS NOT NULL THEN true ELSE false END AS acceptor_verified
@@ -287,6 +293,7 @@ app.get('/api/challenges', async (req, res) => {
       challenger_verified:  r.challenger_verified,
       status:               r.status,
       created_at:           r.created_at,
+      admin_created:        r.admin_created,
       acceptor_name:        r.acceptor_name  ?? null,
       acceptor_links:       normalizeLinks(r.acceptor_links),
       acceptor_verified:    r.acceptor_verified,
@@ -375,6 +382,15 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       });
     }
 
+    let chosenPos = null;
+    if (challenge.challenger_position === null) {
+      const cp = b.chosen_position;
+      if (cp !== 'A' && cp !== 'B') {
+        return res.status(400).json({ error: 'Please select which position you wish to argue.' });
+      }
+      chosenPos = cp;
+    }
+
     const name  = trimStr(b.name, 100);
     const email = parseEmail(b.email);
     const links = parseLinks(b.links);
@@ -389,9 +405,9 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       await pool.query(`
         INSERT INTO pending_acceptances
           (id, challenge_id, acceptor_name, acceptor_email, acceptor_links,
-           verify_token, verify_expires)
-        VALUES ($1,$2,$3,$4,$5,$6, NOW() + INTERVAL '24 hours')
-      `, [pendingId, id, name, email, JSON.stringify(links), token]);
+           verify_token, verify_expires, chosen_position)
+        VALUES ($1,$2,$3,$4,$5,$6, NOW() + INTERVAL '24 hours', $7)
+      `, [pendingId, id, name, email, JSON.stringify(links), token, chosenPos]);
     } catch (err) {
       if (err.code === '23505') {
         return res.status(409).json({
@@ -401,7 +417,9 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       throw err;
     }
 
-    const acceptorPos = challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a;
+    const acceptorPos = chosenPos !== null
+      ? (chosenPos === 'A' ? challenge.position_a : challenge.position_b)
+      : (challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a);
     sendMail(
       email,
       `Confirm your acceptance of a Mute Points debate`,
@@ -499,6 +517,34 @@ app.get('/verify/accept/:token', async (req, res) => {
         'Challenge no longer available',
         'This challenge has already been matched or removed. Please check the noticeboard for other open challenges.',
         true
+      ));
+    }
+
+    if (pending.chosen_position) {
+      const posLabel = pending.chosen_position === 'A' ? challenge.position_a : challenge.position_b;
+      await pool.query(`
+        UPDATE challenges SET
+          challenger_name = $1, challenger_email = $2, challenger_links = $3,
+          challenger_position = $4
+        WHERE id = $5
+      `, [pending.acceptor_name, pending.acceptor_email, pending.acceptor_links,
+          pending.chosen_position, challenge.id]);
+      await pool.query(`DELETE FROM pending_acceptances WHERE id = $1`, [pending.id]);
+      if (ORGANISER_EMAIL) {
+        sendMail(
+          ORGANISER_EMAIL,
+          `First side claimed: "${challenge.title}"`,
+          `${pending.acceptor_name} has confirmed the ${posLabel} position in:\n\n` +
+          `"${challenge.title}"\n\n` +
+          `The challenge is still open — the other side is now available.\n\n` +
+          `Admin: ${SITE_URL}/admin`
+        );
+      }
+      return res.send(verifyPage(
+        'Position confirmed!',
+        `You're confirmed to argue <strong>${posLabel}</strong> in ` +
+        `"<strong>${challenge.title}</strong>". ` +
+        `We're now seeking someone to take the other side. Mute Points will be in touch when a match is found.`
       ));
     }
 
@@ -670,6 +716,56 @@ app.post('/admin/api/verified-debaters', requireAdmin, async (req, res) => {
 app.delete('/admin/api/verified-debaters/:email', requireAdmin, async (req, res) => {
   try {
     await pool.query(`DELETE FROM verified_debaters WHERE email = $1`, [req.params.email]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.post('/admin/api/challenges', requireAdmin, async (req, res) => {
+  const title = trimStr(req.body.title, 200);
+  const posA  = trimStr(req.body.position_a, 100);
+  const posB  = trimStr(req.body.position_b, 100);
+
+  if (!title) return res.status(400).json({ error: 'Debate title is required.' });
+  if (!posA)  return res.status(400).json({ error: 'Position A is required.' });
+  if (!posB)  return res.status(400).json({ error: 'Position B is required.' });
+
+  const id = randomUUID();
+  try {
+    await pool.query(`
+      INSERT INTO challenges
+        (id, title, position_a, position_b, challenger_position,
+         challenger_name, challenger_email, challenger_links,
+         status, admin_created)
+      VALUES ($1,$2,$3,$4,NULL,'Mute Points',$5,'[]','open',TRUE)
+    `, [id, title, posA, posB, ORGANISER_EMAIL || 'admin@mutepoints.com']);
+    res.json({ success: true, id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.post('/admin/api/challenges/:id/edit', requireAdmin, async (req, res) => {
+  const title = trimStr(req.body.title, 200);
+  const posA  = trimStr(req.body.position_a, 100);
+  const posB  = trimStr(req.body.position_b, 100);
+
+  if (!title) return res.status(400).json({ error: 'Debate title is required.' });
+  if (!posA)  return res.status(400).json({ error: 'Position A is required.' });
+  if (!posB)  return res.status(400).json({ error: 'Position B is required.' });
+
+  try {
+    const result = await pool.query(`
+      UPDATE challenges SET title = $1, position_a = $2, position_b = $3
+      WHERE id = $4 AND admin_created = TRUE AND challenger_position IS NULL AND status = 'open'
+    `, [title, posA, posB, req.params.id]);
+
+    if (result.rowCount === 0) {
+      return res.status(409).json({ error: 'Topic cannot be edited — it may have been claimed or closed.' });
+    }
     res.json({ success: true });
   } catch (err) {
     console.error(err);

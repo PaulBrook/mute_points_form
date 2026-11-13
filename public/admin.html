@@ -368,6 +368,68 @@
       font-weight: 300;
       font-style: italic;
     }
+
+    /* ── Create Admin Topic form ── */
+    .admin-form-panel {
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 20px 20px 16px;
+      margin-bottom: 28px;
+    }
+
+    .admin-form-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .admin-form-input {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 14px;
+      padding: 8px 12px;
+      border: 1.5px solid #d0b0b0;
+      border-radius: 4px;
+      outline: none;
+      flex: 2;
+      min-width: 160px;
+    }
+
+    .admin-form-input.at-pos { flex: 1; min-width: 120px; }
+    .admin-form-input:focus { border-color: #4C0000; }
+    .admin-form-input.has-error { border-color: #c00000; }
+
+    .at-submit-btn {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      background: #4C0000;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .at-submit-btn:hover { background: #6B0000; }
+    .at-submit-btn:disabled { opacity: 0.6; }
+
+    .at-error {
+      font-size: 13px;
+      color: #c00000;
+      margin-top: 8px;
+    }
+
+    /* ── Admin topic badge ── */
+    .status-badge.admin-topic { background: #f3e5f5; color: #7b1fa2; margin-right: 6px; }
+
+    /* ── Edit button ── */
+    .action-btn.edit-btn { background: #e8eaf6; color: #283593; }
+    .action-btn.edit-btn:hover { background: #c5cae9; }
   </style>
 </head>
 <body>
@@ -391,6 +453,18 @@
     <div class="stat-card"><div class="stat-num" id="stat-matched">—</div><div class="stat-label">Matched</div></div>
     <div class="stat-card"><div class="stat-num" id="stat-closed">—</div><div class="stat-label">Closed</div></div>
     <div class="stat-card"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total</div></div>
+  </div>
+
+  <!-- ── Create Admin Topic ── -->
+  <h2 class="section-heading" style="margin-top:0;margin-bottom:14px">Create Admin Topic</h2>
+  <div class="admin-form-panel">
+    <div class="admin-form-row">
+      <input type="text" class="admin-form-input" id="at-title" placeholder="Debate title / proposition">
+      <input type="text" class="admin-form-input at-pos" id="at-posa" placeholder="Position A">
+      <input type="text" class="admin-form-input at-pos" id="at-posb" placeholder="Position B">
+      <button class="at-submit-btn" id="at-submit">Create Topic</button>
+    </div>
+    <div class="at-error" id="at-error" style="display:none"></div>
   </div>
 
   <div class="filter-bar">
@@ -438,9 +512,10 @@ function fmt(dateStr) {
   });
 }
 
-function renderSlot(posLabel, name, email, links, isVacant) {
+function renderSlot(posLabel, name, email, links, isVacant, isAdminVacant) {
   if (isVacant) {
-    return `<div class="admin-slot vacant"><div class="admin-slot-pos">${esc(posLabel)}</div>Seeking opponent</div>`;
+    const vacantText = isAdminVacant ? 'Seeking participant' : 'Seeking opponent';
+    return `<div class="admin-slot vacant"><div class="admin-slot-pos">${esc(posLabel)}</div>${vacantText}</div>`;
   }
   const linksHtml = (links || []).map(l =>
     `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label || l.url)} ↗</a></li>`
@@ -455,17 +530,24 @@ function renderSlot(posLabel, name, email, links, isVacant) {
 }
 
 function renderCard(c) {
+  const bothOpen = c.admin_created && c.challenger_position === null;
   const challengerInA = c.challenger_position === 'A';
 
-  const slotAName   = challengerInA ? c.challenger_name : (c.acceptor_name || null);
-  const slotAEmail  = challengerInA ? c.challenger_email : (c.acceptor_email || '');
-  const slotALinks  = challengerInA ? c.challenger_links : c.acceptor_links;
-  const slotBName   = challengerInA ? (c.acceptor_name || null) : c.challenger_name;
-  const slotBEmail  = challengerInA ? (c.acceptor_email || '') : c.challenger_email;
-  const slotBLinks  = challengerInA ? c.acceptor_links : c.challenger_links;
+  let slotAName, slotAEmail, slotALinks, slotBName, slotBEmail, slotBLinks;
+  if (bothOpen) {
+    slotAName = null; slotAEmail = ''; slotALinks = [];
+    slotBName = null; slotBEmail = ''; slotBLinks = [];
+  } else {
+    slotAName   = challengerInA ? c.challenger_name  : (c.acceptor_name  || null);
+    slotAEmail  = challengerInA ? c.challenger_email : (c.acceptor_email || '');
+    slotALinks  = challengerInA ? c.challenger_links : c.acceptor_links;
+    slotBName   = challengerInA ? (c.acceptor_name  || null) : c.challenger_name;
+    slotBEmail  = challengerInA ? (c.acceptor_email || '')   : c.challenger_email;
+    slotBLinks  = challengerInA ? c.acceptor_links           : c.challenger_links;
+  }
 
-  const slotA = renderSlot(c.position_a, slotAName, slotAEmail, slotALinks, !slotAName);
-  const slotB = renderSlot(c.position_b, slotBName, slotBEmail, slotBLinks, !slotBName);
+  const slotA = renderSlot(c.position_a, slotAName, slotAEmail, slotALinks, !slotAName, bothOpen);
+  const slotB = renderSlot(c.position_b, slotBName, slotBEmail, slotBLinks, !slotBName, bothOpen);
 
   let actions = '';
   if (c.status === 'pending')  actions = `<button class="action-btn reopen-btn" data-id="${c.id}" data-action="open">Publish</button>`;
@@ -475,17 +557,22 @@ function renderCard(c) {
   if (c.status !== 'deleted') {
     actions += ` <button class="action-btn delete-btn" data-id="${c.id}" data-action="deleted">Delete</button>`;
   }
+  if (bothOpen && c.status === 'open') {
+    actions += ` <button class="action-btn edit-btn" data-id="${c.id}"
+        data-title="${esc(c.title)}" data-posa="${esc(c.position_a)}" data-posb="${esc(c.position_b)}">Edit</button>`;
+  }
 
   const pendingAcceptance = c.pending_name
     ? `<br><span class="pending-notice">Pending acceptance: ${esc(c.pending_name)} — expires ${fmt(c.pending_expires)}</span>`
     : '';
   const matchedLine = c.accepted_at ? `<br>Matched: ${fmt(c.accepted_at)}` : '';
 
+  const adminBadge = c.admin_created ? `<span class="status-badge admin-topic">Admin Topic</span>` : '';
   return `
     <div class="admin-card status-${esc(c.status)}" data-id="${c.id}">
       <div class="admin-card-top">
         <div class="admin-card-title">${esc(c.title)}</div>
-        <span class="status-badge ${esc(c.status)}">${esc(c.status)}</span>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${adminBadge}<span class="status-badge ${esc(c.status)}">${esc(c.status)}</span></div>
       </div>
       <div class="admin-participants">
         ${slotA}
@@ -512,6 +599,10 @@ function applyFilter() {
 
   list.querySelectorAll('[data-action]').forEach(btn => {
     btn.addEventListener('click', () => setStatus(btn.dataset.id, btn.dataset.action));
+  });
+
+  list.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => startEditTopic(btn.dataset.id, btn.dataset.title, btn.dataset.posa, btn.dataset.posb));
   });
 }
 
@@ -557,7 +648,67 @@ async function setStatus(id, status) {
   }
 }
 
-// ── Verified debaters ──────────────────────────────────────────
+// ── Admin topic form ───────────────────────────────────────────
+
+let editingTopicId = null;
+
+async function saveAdminTopic() {
+  const title = document.getElementById('at-title').value.trim();
+  const posA  = document.getElementById('at-posa').value.trim();
+  const posB  = document.getElementById('at-posb').value.trim();
+  const errEl = document.getElementById('at-error');
+
+  if (!title || !posA || !posB) {
+    errEl.textContent = 'All three fields are required.';
+    errEl.style.display = '';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  const btn = document.getElementById('at-submit');
+  btn.disabled = true;
+  btn.textContent = editingTopicId ? 'Saving…' : 'Creating…';
+
+  try {
+    const url = editingTopicId
+      ? `/admin/api/challenges/${editingTopicId}/edit`
+      : '/admin/api/challenges';
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, position_a: posA, position_b: posB }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed');
+    }
+    document.getElementById('at-title').value = '';
+    document.getElementById('at-posa').value  = '';
+    document.getElementById('at-posb').value  = '';
+    editingTopicId = null;
+    btn.textContent = 'Create Topic';
+    await loadChallenges();
+  } catch (err) {
+    errEl.textContent = err.message || 'Server error.';
+    errEl.style.display = '';
+  } finally {
+    btn.disabled = false;
+    if (!editingTopicId) btn.textContent = 'Create Topic';
+  }
+}
+
+function startEditTopic(id, title, posA, posB) {
+  editingTopicId = id;
+  document.getElementById('at-title').value = title;
+  document.getElementById('at-posa').value  = posA;
+  document.getElementById('at-posb').value  = posB;
+  document.getElementById('at-submit').textContent = 'Save Changes';
+  document.getElementById('at-error').style.display = 'none';
+  document.getElementById('at-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('at-title').focus();
+}
+
+// ── Verified debaters ───────────────────────────────────────────
 
 async function loadVerifiedDebaters() {
   const listEl = document.getElementById('vd-list');
@@ -651,6 +802,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
+document.getElementById('at-submit').addEventListener('click', saveAdminTopic);
 document.getElementById('vd-add-btn').addEventListener('click', addVerifiedDebater);
 
 loadChallenges();

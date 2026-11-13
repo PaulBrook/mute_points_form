@@ -1062,6 +1062,36 @@ function verifiedBadge() {
 }
 
 function renderCard(c) {
+  const bothOpen = c.admin_created && c.challenger_position === null;
+
+  if (bothOpen) {
+    function openSlot(posLabel, posKey) {
+      return `
+        <div class="slot vacant">
+          <div class="slot-position">${esc(posLabel)}</div>
+          <div class="slot-seeking">Seeking participant…</div>
+          <button class="accept-btn" data-id="${esc(c.id)}" data-title="${esc(c.title)}"
+                  data-position="${esc(posLabel)}" data-chosen-position="${posKey}">Take this side</button>
+        </div>`;
+    }
+    return `
+      <div class="challenge-card">
+        <div class="card-top">
+          <div class="card-title">${esc(c.title)}</div>
+          <span class="status-pill open">Both sides open</span>
+        </div>
+        <div class="matchup">
+          ${openSlot(c.position_a, 'A')}
+          <div class="vs-col"><div class="vs-badge">VS</div></div>
+          ${openSlot(c.position_b, 'B')}
+        </div>
+        <div class="card-foot">
+          Proposed by Mute Points
+          <button class="report-link" data-id="${esc(c.id)}">Report</button>
+        </div>
+      </div>`;
+  }
+
   const challengerInA = c.challenger_position === 'A';
 
   const slotAName     = challengerInA ? c.challenger_name     : (c.acceptor_name  || null);
@@ -1100,7 +1130,9 @@ function renderCard(c) {
 
   const footerDate = c.status === 'matched' && c.accepted_at
     ? `Matched ${timeAgo(c.accepted_at)}`
-    : `Posted ${timeAgo(c.created_at)}`;
+    : c.admin_created
+      ? `Proposed by Mute Points`
+      : `Posted ${timeAgo(c.created_at)}`;
 
   const statusLabels = { open: 'Seeking opponent', matched: 'Matched', closed: 'Closed' };
   const statusBadge  = `<span class="status-pill ${esc(c.status)}">${esc(statusLabels[c.status] || c.status)}</span>`;
@@ -1154,7 +1186,7 @@ async function loadChallenges() {
 
     list.querySelectorAll('.accept-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        openAcceptModal(btn.dataset.id, btn.dataset.title, btn.dataset.position);
+        openAcceptModal(btn.dataset.id, btn.dataset.title, btn.dataset.position, btn.dataset.chosenPosition || null);
       });
     });
 
@@ -1184,7 +1216,10 @@ function closeModal(id) {
   document.body.style.paddingRight = '';
 }
 
-function openAcceptModal(challengeId, title, position) {
+let currentChosenPosition = null;
+
+function openAcceptModal(challengeId, title, position, chosenPosition = null) {
+  currentChosenPosition = chosenPosition;
   document.getElementById('accept-challenge-id').value = challengeId;
   document.getElementById('accept-sum-title').textContent = title;
   document.getElementById('accept-sum-position').textContent = position;
@@ -1377,7 +1412,7 @@ document.getElementById('accept-form').addEventListener('submit', async e => {
     const res = await fetch(`/api/challenges/${challengeId}/accept`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, links: collectLinks('af'), _hp: hp }),
+      body: JSON.stringify({ name, email, links: collectLinks('af'), _hp: hp, chosen_position: currentChosenPosition }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Server error');

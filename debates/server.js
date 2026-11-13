@@ -406,12 +406,12 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       email,
       `Confirm your place in a Mute Points debate`,
       `Hi ${name},\n\n` +
-      `You've accepted a debate challenge on Mute Points:\n\n` +
+      `You've signed up for a debate on Mute Points:\n\n` +
       `"${challenge.title}"\n` +
       `Your position: ${acceptorPos}\n\n` +
-      `Please click the link below to confirm your acceptance:\n\n` +
+      `Please click the link below to confirm your place:\n\n` +
       `${SITE_URL}/verify/accept/${token}\n\n` +
-      `This link expires in 24 hours. If you didn't accept this challenge, you can ignore this email.\n\n` +
+      `This link expires in 24 hours. If you didn't sign up for this, you can ignore this email.\n\n` +
       `Mute Points`
     );
 

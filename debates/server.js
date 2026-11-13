@@ -407,7 +407,7 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       throw err;
     }
 
-    const acceptorPos = challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a;
+    const acceptorPos = pending.acceptor_position || (challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a);
     sendMail(
       email,
       `Confirm your place in a Mute Points debate`,
@@ -508,27 +508,48 @@ app.get('/verify/accept/:token', async (req, res) => {
       ));
     }
 
-    // Atomic: update challenge + insert acceptance + delete pending
+    const bothOpen = !challenge.challenger_position;
+    const acceptorPos = pending.acceptor_position || (challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a);
+
+    // Atomic update
     const client = await pool.connect();
     let raceCondition = false;
     try {
       await client.query('BEGIN');
 
-      const result = await client.query(
-        `UPDATE challenges SET status = 'matched' WHERE id = $1 AND status = 'open'`,
-        [challenge.id]
-      );
-      if (result.rowCount === 0) {
-        raceCondition = true;
-        await client.query('ROLLBACK');
+      if (bothOpen) {
+        // First person to confirm claims their side — convert to a normal open challenge
+        const claimedA = pending.acceptor_position === challenge.position_a;
+        const newPos = claimedA ? 'A' : 'B';
+        const result = await client.query(
+          `UPDATE challenges
+           SET challenger_name = $1, challenger_email = $2, challenger_links = $3, challenger_position = $4
+           WHERE id = $5 AND status = 'open' AND (challenger_position IS NULL OR challenger_position = '')`,
+          [pending.acceptor_name, pending.acceptor_email, JSON.stringify(pending.acceptor_links), newPos, challenge.id]
+        );
+        if (result.rowCount === 0) {
+          raceCondition = true;
+          await client.query('ROLLBACK');
+        } else {
+          await client.query(`DELETE FROM pending_acceptances WHERE id = $1`, [pending.id]);
+          await client.query('COMMIT');
+        }
       } else {
-        await client.query(`
-          INSERT INTO acceptances (id, challenge_id, acceptor_name, acceptor_email, acceptor_links)
-          VALUES ($1,$2,$3,$4,$5)
-        `, [randomUUID(), challenge.id, pending.acceptor_name, pending.acceptor_email, pending.acceptor_links]);
-
-        await client.query(`DELETE FROM pending_acceptances WHERE id = $1`, [pending.id]);
-        await client.query('COMMIT');
+        const result = await client.query(
+          `UPDATE challenges SET status = 'matched' WHERE id = $1 AND status = 'open'`,
+          [challenge.id]
+        );
+        if (result.rowCount === 0) {
+          raceCondition = true;
+          await client.query('ROLLBACK');
+        } else {
+          await client.query(`
+            INSERT INTO acceptances (id, challenge_id, acceptor_name, acceptor_email, acceptor_links)
+            VALUES ($1,$2,$3,$4,$5)
+          `, [randomUUID(), challenge.id, pending.acceptor_name, pending.acceptor_email, JSON.stringify(pending.acceptor_links)]);
+          await client.query(`DELETE FROM pending_acceptances WHERE id = $1`, [pending.id]);
+          await client.query('COMMIT');
+        }
       }
     } catch (err) {
       await client.query('ROLLBACK');
@@ -539,34 +560,50 @@ app.get('/verify/accept/:token', async (req, res) => {
 
     if (raceCondition) {
       return res.send(verifyPage(
-        'Challenge already matched',
-        'Someone else was verified just before you. Please check the noticeboard for other open challenges.',
+        'Position already taken',
+        'Someone else confirmed just before you. Please check the noticeboard for other open sides.',
         true
       ));
     }
 
-    const challengerPos = challenge.challenger_position === 'A' ? challenge.position_a : challenge.position_b;
-    const acceptorPos   = challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a;
-
-    if (ORGANISER_EMAIL) {
-      sendMail(
-        ORGANISER_EMAIL,
-        `Debate matched: "${challenge.title}"`,
-        `A debate has been matched on Mute Points!\n\n` +
-        `Debate:    ${challenge.title}\n\n` +
-        `${challenge.challenger_name} will argue: ${challengerPos}\n` +
-        `${pending.acceptor_name} will argue: ${acceptorPos}\n\n` +
-        `Challenger: ${challenge.challenger_name} (${challenge.challenger_email})\n` +
-        `Acceptor:   ${pending.acceptor_name} (${pending.acceptor_email})\n\n` +
-        `Admin: ${SITE_URL}/admin`
-      );
+    if (bothOpen) {
+      if (ORGANISER_EMAIL) {
+        sendMail(
+          ORGANISER_EMAIL,
+          `Side claimed: "${challenge.title}"`,
+          `Someone has claimed a side on Mute Points!\n\n` +
+          `Debate: ${challenge.title}\n` +
+          `${pending.acceptor_name} will argue: ${acceptorPos}\n\n` +
+          `Contact: ${pending.acceptor_name} (${pending.acceptor_email})\n\n` +
+          `Admin: ${SITE_URL}/admin`
+        );
+      }
+      res.send(verifyPage(
+        'You\'re on!',
+        `You've claimed the <strong>${acceptorPos}</strong> side of "<strong>${challenge.title}</strong>". ` +
+        `We'll be in touch once an opponent signs up for the other side.`
+      ));
+    } else {
+      const challengerPos = challenge.challenger_position === 'A' ? challenge.position_a : challenge.position_b;
+      if (ORGANISER_EMAIL) {
+        sendMail(
+          ORGANISER_EMAIL,
+          `Debate matched: "${challenge.title}"`,
+          `A debate has been matched on Mute Points!\n\n` +
+          `Debate:    ${challenge.title}\n\n` +
+          `${challenge.challenger_name} will argue: ${challengerPos}\n` +
+          `${pending.acceptor_name} will argue: ${acceptorPos}\n\n` +
+          `Challenger: ${challenge.challenger_name} (${challenge.challenger_email})\n` +
+          `Acceptor:   ${pending.acceptor_name} (${pending.acceptor_email})\n\n` +
+          `Admin: ${SITE_URL}/admin`
+        );
+      }
+      res.send(verifyPage(
+        'Acceptance confirmed!',
+        `You're confirmed to debate "<strong>${challenge.title}</strong>", arguing ${acceptorPos}. ` +
+        `Mute Points will be in touch to arrange the debate.`
+      ));
     }
-
-    res.send(verifyPage(
-      'Acceptance confirmed!',
-      `You're confirmed to debate "<strong>${challenge.title}</strong>", arguing ${acceptorPos}. ` +
-      `Mute Points will be in touch to arrange the debate.`
-    ));
   } catch (err) {
     console.error(err);
     res.status(500).send(verifyPage('Something went wrong', 'Please try again later.', true));

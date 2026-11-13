@@ -574,9 +574,9 @@ async function loadVerifiedDebaters() {
         <tbody>
           ${debaters.map(d => `
             <tr>
-              <td>${esc(d.name)}</td>
+              <td>${esc(d.display_name)}</td>
               <td>${esc(d.email)}</td>
-              <td>${fmt(d.created_at)}</td>
+              <td>${fmt(d.added_at)}</td>
               <td><button class="vd-remove-btn" data-email="${esc(d.email)}">Remove</button></td>
             </tr>`).join('')}
         </tbody>

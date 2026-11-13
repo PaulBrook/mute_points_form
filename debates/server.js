@@ -374,7 +374,7 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
     );
     if (existing.rows.length > 0) {
       return res.status(409).json({
-        error: 'Someone else has just claimed this position — if they don't confirm within 24 hours it will become available again.',
+        error: "Someone else has just claimed this position — if they don't confirm within 24 hours it will become available again.",
       });
     }
 
@@ -398,7 +398,7 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
     } catch (err) {
       if (err.code === '23505') {
         return res.status(409).json({
-          error: 'Someone else has just claimed this position — if they don't confirm within 24 hours it will become available again.',
+          error: "Someone else has just claimed this position — if they don't confirm within 24 hours it will become available again.",
         });
       }
       throw err;

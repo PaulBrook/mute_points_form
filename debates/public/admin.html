@@ -399,7 +399,6 @@
     <button class="filter-btn" data-filter="open">Open</button>
     <button class="filter-btn" data-filter="matched">Matched</button>
     <button class="filter-btn" data-filter="closed">Closed</button>
-    <button class="filter-btn" data-filter="deleted">Deleted</button>
   </div>
 
   <div id="challenges-list">
@@ -468,12 +467,8 @@ function renderCard(c) {
 
   let actions = '';
   if (c.status === 'pending')  actions = `<button class="action-btn reopen-btn" data-id="${c.id}" data-action="open">Publish</button>`;
-  if (c.status === 'open')     actions = `<button class="action-btn close-btn"  data-id="${c.id}" data-action="closed">Close</button>`;
-  if (c.status === 'matched')  actions = `<button class="action-btn close-btn"  data-id="${c.id}" data-action="closed">Close</button>`;
-  if (c.status === 'closed')   actions = `<button class="action-btn reopen-btn" data-id="${c.id}" data-action="open">Reopen</button>`;
-  if (c.status !== 'deleted') {
-    actions += ` <button class="action-btn delete-btn" data-id="${c.id}" data-action="deleted">Delete</button>`;
-  }
+  if (c.status === 'closed') actions = `<button class="action-btn reopen-btn" data-id="${c.id}" data-action="open">Reopen</button>`;
+  actions += ` <button class="action-btn delete-btn" data-id="${c.id}" data-action="remove">Remove</button>`;
 
   const pendingAcceptance = c.pending_name
     ? `<br><span class="pending-notice">Pending acceptance: ${esc(c.pending_name)} — expires ${fmt(c.pending_expires)}</span>`
@@ -530,7 +525,7 @@ async function loadChallenges() {
     document.getElementById('stat-open').textContent    = counts.open;
     document.getElementById('stat-matched').textContent = counts.matched;
     document.getElementById('stat-closed').textContent  = counts.closed;
-    document.getElementById('stat-total').textContent   = allChallenges.filter(c => c.status !== 'deleted').length;
+    document.getElementById('stat-total').textContent   = allChallenges.length;
 
     applyFilter();
   } catch (err) {
@@ -539,15 +534,24 @@ async function loadChallenges() {
   }
 }
 
-async function setStatus(id, status) {
-  const confirmMsg = status === 'deleted' ? 'Delete this challenge?' : null;
-  if (confirmMsg && !confirm(confirmMsg)) return;
+async function setStatus(id, action) {
+  if (action === 'remove') {
+    if (!confirm('Permanently remove this debate?')) return;
+    try {
+      const res = await fetch(`/admin/api/challenges/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed');
+      await loadChallenges();
+    } catch {
+      alert('Action failed. Please try again.');
+    }
+    return;
+  }
 
   try {
     const res = await fetch(`/admin/api/challenges/${id}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status: action }),
     });
     if (!res.ok) throw new Error('Failed');
     await loadChallenges();

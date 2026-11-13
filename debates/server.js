@@ -747,11 +747,23 @@ app.get('/admin/api/challenges', requireAdmin, async (req, res) => {
 
 app.post('/admin/api/challenges/:id/status', requireAdmin, async (req, res) => {
   const { status } = req.body;
-  if (!['open', 'closed', 'deleted'].includes(status)) {
+  if (!['open', 'closed'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status.' });
   }
   try {
     await pool.query('UPDATE challenges SET status = $1 WHERE id = $2', [status, req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+app.delete('/admin/api/challenges/:id', requireAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM acceptances WHERE challenge_id = $1', [req.params.id]);
+    await pool.query('DELETE FROM pending_acceptances WHERE challenge_id = $1', [req.params.id]);
+    await pool.query('DELETE FROM challenges WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     console.error(err);

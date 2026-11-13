@@ -168,7 +168,7 @@ function requireAdmin(req, res, next) {
   }
   const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
   const colon   = decoded.indexOf(':');
-  if (decoded.slice(0, colon) === 'admin' && decoded.slice(colon + 1) === ADMIN_PASSWORD) return next();
+  if (decoded.slice(0, colon) === 'paul.brook@gmail.com' && decoded.slice(colon + 1) === ADMIN_PASSWORD) return next();
   res.set('WWW-Authenticate', 'Basic realm="Mute Points Admin"').status(401).end('Unauthorized');
 }
 

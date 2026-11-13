@@ -1062,13 +1062,14 @@ function verifiedBadge() {
 
 function renderCard(c) {
   const challengerInA = c.challenger_position === 'A';
+  const challengerInB = c.challenger_position === 'B';
 
-  const slotAName     = challengerInA ? c.challenger_name     : (c.acceptor_name  || null);
-  const slotALinks    = challengerInA ? c.challenger_links    : c.acceptor_links;
+  const slotAName     = challengerInA ? c.challenger_name  : (c.acceptor_name || null);
+  const slotALinks    = challengerInA ? c.challenger_links : c.acceptor_links;
   const slotAVerified = challengerInA ? c.challenger_verified : c.acceptor_verified;
-  const slotBName     = challengerInA ? (c.acceptor_name  || null) : c.challenger_name;
-  const slotBLinks    = challengerInA ? c.acceptor_links  : c.challenger_links;
-  const slotBVerified = challengerInA ? c.acceptor_verified : c.challenger_verified;
+  const slotBName     = challengerInB ? c.challenger_name  : (challengerInA ? (c.acceptor_name || null) : null);
+  const slotBLinks    = challengerInB ? c.challenger_links : (challengerInA ? c.acceptor_links : []);
+  const slotBVerified = challengerInB ? c.challenger_verified : (challengerInA ? c.acceptor_verified : false);
 
   const slotAVacant = !slotAName;
   const slotBVacant = !slotBName;

@@ -1085,7 +1085,7 @@ function renderCard(c) {
           <div class="slot vacant">
             ${posHtml}
             <div class="slot-seeking">Being claimed — pending email verification</div>
-            <button class="accept-btn" disabled>Debate this side</button>
+            <button class="accept-btn" disabled>Take this side</button>
           </div>`;
       }
       return `
@@ -1093,7 +1093,7 @@ function renderCard(c) {
           ${posHtml}
           <div class="slot-seeking">Seeking opponent…</div>
           <button class="accept-btn" data-id="${esc(c.id)}" data-title="${esc(c.title)}"
-                  data-position="${esc(position)}" data-both-open="${!challengerInA && !challengerInB}">Debate this side</button>
+                  data-position="${esc(position)}" data-both-open="${!challengerInA && !challengerInB}">Take this side</button>
         </div>`;
     }
     return `

@@ -1093,7 +1093,7 @@ function renderCard(c) {
           ${posHtml}
           <div class="slot-seeking">Seeking opponent…</div>
           <button class="accept-btn" data-id="${esc(c.id)}" data-title="${esc(c.title)}"
-                  data-position="${esc(position)}">Accept Challenge</button>
+                  data-position="${esc(position)}" data-both-open="${!challengerInA && !challengerInB}">Accept Challenge</button>
         </div>`;
     }
     return `
@@ -1165,7 +1165,7 @@ async function loadChallenges() {
 
     list.querySelectorAll('.accept-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        openAcceptModal(btn.dataset.id, btn.dataset.title, btn.dataset.position);
+        openAcceptModal(btn.dataset.id, btn.dataset.title, btn.dataset.position, btn.dataset.bothOpen === 'true');
       });
     });
 
@@ -1195,11 +1195,13 @@ function closeModal(id) {
   document.body.style.paddingRight = '';
 }
 
-function openAcceptModal(challengeId, title, position) {
+function openAcceptModal(challengeId, title, position, bothOpen) {
   document.getElementById('accept-challenge-id').value = challengeId;
   document.getElementById('accept-position').value = position;
   document.getElementById('accept-sum-title').textContent = title;
   document.getElementById('accept-sum-position').textContent = position;
+  document.getElementById('accept-modal-title').textContent = bothOpen ? 'Sign Up to Debate' : 'Accept Debate Challenge';
+  document.querySelector('#accept-modal .modal-sub').textContent = bothOpen ? 'Enter your details to claim this position.' : 'Confirm your details to claim the vacant position.';
   document.getElementById('accept-form').reset();
   resetLinkRows('af');
   document.getElementById('af-error').classList.remove('visible');

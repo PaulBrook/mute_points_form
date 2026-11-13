@@ -85,6 +85,26 @@
 
     .btn-primary:hover { background: #f5e8e8; }
 
+    .list-explainer {
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      max-width: 680px;
+      margin: 0 auto 32px;
+      line-height: 1.7;
+      padding: 0 24px;
+    }
+
+    .card-source {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.55;
+      margin-bottom: 6px;
+    }
+
     /* ── Challenges list ── */
     .challenges-wrap {
       max-width: 900px;
@@ -792,7 +812,8 @@
   <p class="brand-label"><a href="https://youtube.com/@mutepoints" target="_blank" rel="noopener">Mute Points</a></p>
   <h1>Debate Matching</h1>
   <p class="intro">Issue a public debate challenge, or accept one below. Someone takes the opposing side. We arrange the debate on the <a href="https://youtube.com/@mutepoints" target="_blank" rel="noopener">Mute Points YouTube channel</a>.</p>
-  <button class="btn-primary" id="open-create-btn">Post a New Debate Challenge</button>
+  <button class="btn-primary" id="open-create-btn">Post your own challenge</button>
+  <p class="intro" style="margin-top:10px;font-size:13px;opacity:0.7;">Pick your side — we find your opponent</p>
 </header>
 
 <!-- ── Notification banner (shown after email verification) ──────────────── -->
@@ -802,6 +823,7 @@
 
 <!-- ── Challenges list ───────────────────────────────────────────────────── -->
 <div class="challenges-wrap">
+  <p class="list-explainer">Some debates below are proposed by Mute Points with both sides open — just pick the side you want to argue. Others have a challenger already lined up — take the opposing position.</p>
   <div id="challenges-list">
     <div class="loading">Loading challenges…</div>
   </div>
@@ -1119,10 +1141,17 @@ function renderCard(c) {
   const statusLabels = { open: openLabel, matched: 'Matched', closed: 'Closed' };
   const statusBadge  = `<span class="status-pill ${esc(c.status)}">${esc(statusLabels[c.status] || c.status)}</span>`;
 
+  const sourceLabel = bothOpen
+    ? 'Proposed by Mute Points'
+    : `Challenge from ${esc(c.challenger_name)}`;
+
   return `
     <div class="challenge-card">
       <div class="card-top">
-        <div class="card-title">${esc(c.title)}</div>
+        <div>
+          <div class="card-source">${sourceLabel}</div>
+          <div class="card-title">${esc(c.title)}</div>
+        </div>
         ${statusBadge}
       </div>
       <div class="matchup">
@@ -1151,7 +1180,7 @@ async function loadChallenges() {
         <div class="empty-state">
           <h2>No challenges yet</h2>
           <p>Be the first to issue a debate challenge.<br>Define a proposition, pick your side, and find an opponent.</p>
-          <button class="btn-primary" id="empty-create-btn">Post a New Debate Challenge</button>
+          <button class="btn-primary" id="empty-create-btn">Post your own challenge</button>
         </div>`;
       document.getElementById('empty-create-btn')?.addEventListener('click', () => openModal('create-modal'));
       return;

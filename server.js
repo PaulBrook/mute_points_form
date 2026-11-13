@@ -168,7 +168,7 @@ function requireAdmin(req, res, next) {
   }
   const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
   const colon   = decoded.indexOf(':');
-  if (decoded.slice(0, colon) === 'admin' && decoded.slice(colon + 1) === ADMIN_PASSWORD) return next();
+  if (decoded.slice(0, colon) === 'paul.brook@gmail.com' && decoded.slice(colon + 1) === ADMIN_PASSWORD) return next();
   res.set('WWW-Authenticate', 'Basic realm="Mute Points Admin"').status(401).end('Unauthorized');
 }
 
@@ -678,6 +678,14 @@ app.delete('/admin/api/verified-debaters/:email', requireAdmin, async (req, res)
 });
 
 // ── Admin page ────────────────────────────────────────────────────────────────
+
+app.get('/admin/logout', (req, res) => {
+  const cookieHeader = req.headers.cookie || '';
+  const m = cookieHeader.match(/(?:^|;\s*)admin_session=([^;]+)/);
+  if (m) adminSessions.delete(m[1]);
+  res.clearCookie('admin_session', { path: '/admin' });
+  res.set('WWW-Authenticate', 'Basic realm="Mute Points Admin"').status(401).end('Logged out');
+});
 
 app.get('/admin', requireAdmin, (req, res) => {
   // Set a session cookie so fetch() calls from the admin page don't need to

@@ -1113,7 +1113,9 @@ function renderCard(c) {
     ? `Matched ${timeAgo(c.accepted_at)}`
     : `Posted ${timeAgo(c.created_at)}`;
 
-  const statusLabels = { open: 'Seeking opponent', matched: 'Matched', closed: 'Closed' };
+  const bothOpen = !challengerInA && !challengerInB;
+  const openLabel = bothOpen ? 'Both sides open' : 'Seeking opponent';
+  const statusLabels = { open: openLabel, matched: 'Matched', closed: 'Closed' };
   const statusBadge  = `<span class="status-pill ${esc(c.status)}">${esc(statusLabels[c.status] || c.status)}</span>`;
 
   return `

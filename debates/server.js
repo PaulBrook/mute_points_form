@@ -66,9 +66,11 @@ async function initSchema() {
 
     CREATE TABLE IF NOT EXISTS verified_debaters (
       email        TEXT PRIMARY KEY,
-      display_name TEXT NOT NULL,
+      display_name TEXT NOT NULL DEFAULT '',
       added_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    ALTER TABLE verified_debaters ALTER COLUMN display_name SET DEFAULT '';
   `);
   console.log('Schema ready.');
 }
@@ -769,15 +771,11 @@ app.get('/admin/api/verified-debaters', requireAdmin, async (req, res) => {
 
 app.post('/admin/api/verified-debaters', requireAdmin, async (req, res) => {
   const email = parseEmail(req.body.email);
-  const name  = trimStr(req.body.name || req.body.display_name || '', 100);
   if (!email) return res.status(400).json({ error: 'Valid email required.' });
-  if (!name)  return res.status(400).json({ error: 'Display name required.' });
   try {
     await pool.query(
-      `INSERT INTO verified_debaters (email, display_name)
-       VALUES ($1, $2)
-       ON CONFLICT (email) DO UPDATE SET display_name = EXCLUDED.display_name`,
-      [email, name]
+      `INSERT INTO verified_debaters (email) VALUES ($1) ON CONFLICT (email) DO NOTHING`,
+      [email]
     );
     res.json({ success: true });
   } catch (err) {

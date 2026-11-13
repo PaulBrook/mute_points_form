@@ -412,7 +412,6 @@
     People marked here get a "Verified debater" badge on their challenge cards.
   </p>
   <div class="vd-add-row">
-    <input type="text"  name="vd-name"  placeholder="Display name" id="vd-name">
     <input type="email" name="vd-email" placeholder="Email address" id="vd-email">
     <button class="vd-add-btn" id="vd-add-btn">Add</button>
   </div>
@@ -573,11 +572,10 @@ async function loadVerifiedDebaters() {
 
     listEl.innerHTML = `
       <table class="vd-table">
-        <thead><tr><th>Name</th><th>Email</th><th>Added</th><th></th></tr></thead>
+        <thead><tr><th>Email</th><th>Added</th><th></th></tr></thead>
         <tbody>
           ${debaters.map(d => `
             <tr>
-              <td>${esc(d.display_name)}</td>
               <td>${esc(d.email)}</td>
               <td>${fmt(d.added_at)}</td>
               <td><button class="vd-remove-btn" data-email="${esc(d.email)}">Remove</button></td>
@@ -594,13 +592,11 @@ async function loadVerifiedDebaters() {
 }
 
 async function addVerifiedDebater() {
-  const nameEl  = document.getElementById('vd-name');
   const emailEl = document.getElementById('vd-email');
   const btn     = document.getElementById('vd-add-btn');
-  const name    = nameEl.value.trim();
   const email   = emailEl.value.trim();
 
-  if (!name || !email) { alert('Please enter both a name and an email address.'); return; }
+  if (!email) { alert('Please enter an email address.'); return; }
 
   btn.disabled = true;
   btn.textContent = 'Adding…';
@@ -608,13 +604,12 @@ async function addVerifiedDebater() {
     const res = await fetch('/admin/api/verified-debaters', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email }),
+      body: JSON.stringify({ email }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error || 'Failed');
     }
-    nameEl.value  = '';
     emailEl.value = '';
     await loadVerifiedDebaters();
     await loadChallenges();

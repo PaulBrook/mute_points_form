@@ -265,11 +265,13 @@ app.get('/api/challenges', async (req, res) => {
         c.challenger_name, c.challenger_links, c.status, c.created_at,
         a.acceptor_name, a.acceptor_links, a.created_at AS accepted_at,
         CASE WHEN vd1.email IS NOT NULL THEN true ELSE false END AS challenger_verified,
-        CASE WHEN vd2.email IS NOT NULL THEN true ELSE false END AS acceptor_verified
+        CASE WHEN vd2.email IS NOT NULL THEN true ELSE false END AS acceptor_verified,
+        CASE WHEN pa.id IS NOT NULL THEN true ELSE false END AS pending_acceptance
       FROM challenges c
       LEFT JOIN acceptances a ON a.challenge_id = c.id
       LEFT JOIN verified_debaters vd1 ON LOWER(vd1.email) = LOWER(c.challenger_email)
       LEFT JOIN verified_debaters vd2 ON LOWER(vd2.email) = LOWER(a.acceptor_email)
+      LEFT JOIN pending_acceptances pa ON pa.challenge_id = c.id AND pa.verify_expires > NOW()
       WHERE c.status IN ('open', 'matched', 'closed')
       ORDER BY
         CASE c.status WHEN 'open' THEN 0 WHEN 'matched' THEN 1 ELSE 2 END,
@@ -291,6 +293,7 @@ app.get('/api/challenges', async (req, res) => {
       acceptor_links:       normalizeLinks(r.acceptor_links),
       acceptor_verified:    r.acceptor_verified,
       accepted_at:          r.accepted_at    ?? null,
+      pending_acceptance:   r.pending_acceptance,
     })));
   } catch (err) {
     console.error(err);

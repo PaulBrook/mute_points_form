@@ -430,7 +430,66 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
 
 // ── Verification endpoints ────────────────────────────────────────────────────
 
+function confirmPage(heading, detail, postUrl, buttonLabel) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mute Points — ${heading}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Josefin Sans',sans-serif;background:#4C0000;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.35);max-width:480px;width:100%;text-align:center}
+    .card-top{background:#4C0000;padding:40px 36px 36px}
+    .card-top h1{font-size:22px;font-weight:700;letter-spacing:.04em;color:#fff;margin-bottom:8px}
+    .brand{font-size:11px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:18px}
+    .card-body{padding:32px 36px 40px}
+    .card-body p{font-size:15px;font-weight:300;color:#555;line-height:1.75;margin-bottom:24px}
+    button{background:#4C0000;color:#fff;font-family:'Josefin Sans',sans-serif;font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;padding:13px 36px;border-radius:4px;border:none;cursor:pointer}
+    button:hover{background:#6B0000}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-top">
+      <p class="brand">Mute Points</p>
+      <h1>${heading}</h1>
+    </div>
+    <div class="card-body">
+      <p>${detail}</p>
+      <form method="POST" action="${postUrl}">
+        <button type="submit">${buttonLabel}</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 app.get('/verify/challenge/:token', async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT title FROM challenges
+      WHERE verify_token = $1 AND status = 'pending' AND verify_expires > NOW()
+    `, [req.params.token]);
+    if (!rows[0]) {
+      return res.send(verifyPage('Link expired or invalid', 'This verification link has expired or has already been used. Please post your challenge again.', true));
+    }
+    res.send(confirmPage(
+      'Publish your challenge',
+      `Click below to publish "<strong>${rows[0].title}</strong>" on the noticeboard.`,
+      `/verify/challenge/${req.params.token}`,
+      'Publish challenge'
+    ));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(verifyPage('Something went wrong', 'Please try again later.', true));
+  }
+});
+
+app.post('/verify/challenge/:token', async (req, res) => {
   try {
     const { rows } = await pool.query(`
       SELECT * FROM challenges
@@ -439,11 +498,7 @@ app.get('/verify/challenge/:token', async (req, res) => {
     const challenge = rows[0];
 
     if (!challenge) {
-      return res.send(verifyPage(
-        'Link expired or invalid',
-        'This verification link has expired or has already been used. Please post your challenge again.',
-        true
-      ));
+      return res.send(verifyPage('Link expired or invalid', 'This verification link has expired or has already been used. Please post your challenge again.', true));
     }
 
     await pool.query(
@@ -455,8 +510,7 @@ app.get('/verify/challenge/:token', async (req, res) => {
     const oppLabel = challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a;
 
     if (ORGANISER_EMAIL) {
-      sendMail(
-        ORGANISER_EMAIL,
+      sendMail(ORGANISER_EMAIL,
         `New verified debate challenge: "${challenge.title}"`,
         `A new debate challenge has been verified and published.\n\n` +
         `Debate:     ${challenge.title}\n` +
@@ -468,10 +522,7 @@ app.get('/verify/challenge/:token', async (req, res) => {
       );
     }
 
-    res.send(verifyPage(
-      'Challenge published!',
-      `Your debate challenge "<strong>${challenge.title}</strong>" is now live on the noticeboard.`
-    ));
+    res.send(verifyPage('Challenge published!', `Your debate challenge "<strong>${challenge.title}</strong>" is now live on the noticeboard.`));
   } catch (err) {
     console.error(err);
     res.status(500).send(verifyPage('Something went wrong', 'Please try again later.', true));
@@ -479,6 +530,29 @@ app.get('/verify/challenge/:token', async (req, res) => {
 });
 
 app.get('/verify/accept/:token', async (req, res) => {
+  try {
+    const { rows: pRows } = await pool.query(`
+      SELECT pa.acceptor_position, c.title FROM pending_acceptances pa
+      JOIN challenges c ON c.id = pa.challenge_id
+      WHERE pa.verify_token = $1 AND pa.verify_expires > NOW()
+    `, [req.params.token]);
+    if (!pRows[0]) {
+      return res.send(verifyPage('Link expired or invalid', 'This verification link has expired or has already been used. Please return to the noticeboard and try again.', true));
+    }
+    const { title, acceptor_position } = pRows[0];
+    res.send(confirmPage(
+      'Confirm your place',
+      `Click below to confirm your place arguing <strong>${acceptor_position}</strong> in "<strong>${title}</strong>".`,
+      `/verify/accept/${req.params.token}`,
+      'Confirm my place'
+    ));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(verifyPage('Something went wrong', 'Please try again later.', true));
+  }
+});
+
+app.post('/verify/accept/:token', async (req, res) => {
   try {
     const { rows: pRows } = await pool.query(`
       SELECT * FROM pending_acceptances

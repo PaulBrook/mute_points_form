@@ -330,6 +330,13 @@
     .accept-btn:hover { background: #6B0000; }
     .accept-btn:disabled { background: #999; cursor: default; }
 
+    .slot-countdown {
+      font-size: 12px;
+      font-weight: 400;
+      opacity: 0.6;
+      margin-top: 4px;
+    }
+
     /* ── Card footer ── */
     .card-foot {
       border-top: 1px solid #f5eaea;
@@ -1108,6 +1115,7 @@ function renderCard(c) {
           <div class="slot vacant">
             ${posHtml}
             <div class="slot-seeking">Being claimed — pending email verification</div>
+            <div class="slot-countdown" data-expires="${esc(c.pending_expires)}"></div>
             <button class="accept-btn" disabled>Take this side</button>
           </div>`;
       }
@@ -1525,6 +1533,24 @@ document.getElementById('open-create-btn').addEventListener('click', () => {
     .forEach(clearFieldError);
   openModal('create-modal');
 });
+
+// ── Countdown ticker ─────────────────────────────────────────────────────────
+
+function updateCountdowns() {
+  document.querySelectorAll('.slot-countdown[data-expires]').forEach(el => {
+    const ms = new Date(el.dataset.expires) - Date.now();
+    if (ms <= 0) {
+      el.textContent = 'Available again shortly';
+      return;
+    }
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    el.textContent = `Available again in ${h}h ${m}m ${s}s`;
+  });
+}
+
+setInterval(updateCountdowns, 1000);
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 

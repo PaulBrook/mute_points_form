@@ -407,7 +407,7 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       throw err;
     }
 
-    const acceptorPos = pending.acceptor_position || (challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a);
+    const acceptorPos = position || (challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a);
     sendMail(
       email,
       `Confirm your place in a Mute Points debate`,

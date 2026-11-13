@@ -404,7 +404,7 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
     const acceptorPos = challenge.challenger_position === 'A' ? challenge.position_b : challenge.position_a;
     sendMail(
       email,
-      `Confirm your acceptance of a Mute Points debate`,
+      `Confirm your place in a Mute Points debate`,
       `Hi ${name},\n\n` +
       `You've accepted a debate challenge on Mute Points:\n\n` +
       `"${challenge.title}"\n` +

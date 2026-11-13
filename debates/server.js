@@ -202,6 +202,14 @@ function parseLinks(raw) {
     .filter(l => l.url);
 }
 
+// Normalise links from DB — column may be TEXT or JSONB depending on when
+// the table was first created (CREATE TABLE IF NOT EXISTS won't alter columns).
+function normalizeLinks(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === 'string') { try { return JSON.parse(raw); } catch { return []; } }
+  return [];
+}
+
 // ── Verification page helper ──────────────────────────────────────────────────
 
 function verifyPage(heading, body, isError = false) {
@@ -275,12 +283,12 @@ app.get('/api/challenges', async (req, res) => {
       position_b:           r.position_b,
       challenger_position:  r.challenger_position,
       challenger_name:      r.challenger_name,
-      challenger_links:     r.challenger_links,
+      challenger_links:     normalizeLinks(r.challenger_links),
       challenger_verified:  r.challenger_verified,
       status:               r.status,
       created_at:           r.created_at,
       acceptor_name:        r.acceptor_name  ?? null,
-      acceptor_links:       r.acceptor_links ?? [],
+      acceptor_links:       normalizeLinks(r.acceptor_links),
       acceptor_verified:    r.acceptor_verified,
       accepted_at:          r.accepted_at    ?? null,
     })));
@@ -607,8 +615,8 @@ app.get('/admin/api/challenges', requireAdmin, async (req, res) => {
     `);
     res.json(rows.map(r => ({
       ...r,
-      challenger_links: r.challenger_links ?? [],
-      acceptor_links:   r.acceptor_links   ?? [],
+      challenger_links: normalizeLinks(r.challenger_links),
+      acceptor_links:   normalizeLinks(r.acceptor_links),
     })));
   } catch (err) {
     console.error(err);

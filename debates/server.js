@@ -62,6 +62,8 @@ async function initSchema() {
       created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
+    ALTER TABLE pending_acceptances ADD COLUMN IF NOT EXISTS acceptor_position TEXT;
+
     CREATE TABLE IF NOT EXISTS verified_debaters (
       email        TEXT PRIMARY KEY,
       display_name TEXT NOT NULL,
@@ -266,7 +268,7 @@ app.get('/api/challenges', async (req, res) => {
         a.acceptor_name, a.acceptor_links, a.created_at AS accepted_at,
         CASE WHEN vd1.email IS NOT NULL THEN true ELSE false END AS challenger_verified,
         CASE WHEN vd2.email IS NOT NULL THEN true ELSE false END AS acceptor_verified,
-        CASE WHEN pa.id IS NOT NULL THEN true ELSE false END AS pending_acceptance
+        pa.acceptor_position AS pending_position
       FROM challenges c
       LEFT JOIN acceptances a ON a.challenge_id = c.id
       LEFT JOIN verified_debaters vd1 ON LOWER(vd1.email) = LOWER(c.challenger_email)
@@ -293,7 +295,7 @@ app.get('/api/challenges', async (req, res) => {
       acceptor_links:       normalizeLinks(r.acceptor_links),
       acceptor_verified:    r.acceptor_verified,
       accepted_at:          r.accepted_at    ?? null,
-      pending_acceptance:   r.pending_acceptance,
+      pending_position:     r.pending_position ?? null,
     })));
   } catch (err) {
     console.error(err);
@@ -378,9 +380,10 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       });
     }
 
-    const name  = trimStr(b.name, 100);
-    const email = parseEmail(b.email);
-    const links = parseLinks(b.links);
+    const name     = trimStr(b.name, 100);
+    const email    = parseEmail(b.email);
+    const links    = parseLinks(b.links);
+    const position = trimStr(b.position, 100) || null;
 
     if (!name)  return res.status(400).json({ error: 'Your name is required.' });
     if (!email) return res.status(400).json({ error: 'A valid email address is required.' });
@@ -392,9 +395,9 @@ app.post('/api/challenges/:id/accept', submitLimit, async (req, res) => {
       await pool.query(`
         INSERT INTO pending_acceptances
           (id, challenge_id, acceptor_name, acceptor_email, acceptor_links,
-           verify_token, verify_expires)
-        VALUES ($1,$2,$3,$4,$5,$6, NOW() + INTERVAL '24 hours')
-      `, [pendingId, id, name, email, JSON.stringify(links), token]);
+           acceptor_position, verify_token, verify_expires)
+        VALUES ($1,$2,$3,$4,$5,$6,$7, NOW() + INTERVAL '24 hours')
+      `, [pendingId, id, name, email, JSON.stringify(links), position, token]);
     } catch (err) {
       if (err.code === '23505') {
         return res.status(409).json({

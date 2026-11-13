@@ -944,6 +944,7 @@
           </div>
 
           <input type="hidden" id="accept-challenge-id" name="challenge_id">
+          <input type="hidden" id="accept-position" name="position">
 
           <div class="modal-section-label">Your details</div>
 
@@ -1079,7 +1080,7 @@ function renderCard(c) {
   function slotHtml(position, name, links, isVacant, isVerified) {
     const posHtml = `<div class="slot-position">${esc(position)}</div>`;
     if (isVacant && c.status === 'open') {
-      if (c.pending_acceptance) {
+      if (c.pending_position === position) {
         return `
           <div class="slot vacant">
             ${posHtml}
@@ -1196,6 +1197,7 @@ function closeModal(id) {
 
 function openAcceptModal(challengeId, title, position) {
   document.getElementById('accept-challenge-id').value = challengeId;
+  document.getElementById('accept-position').value = position;
   document.getElementById('accept-sum-title').textContent = title;
   document.getElementById('accept-sum-position').textContent = position;
   document.getElementById('accept-form').reset();
@@ -1387,7 +1389,7 @@ document.getElementById('accept-form').addEventListener('submit', async e => {
     const res = await fetch(`/api/challenges/${challengeId}/accept`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, links: collectLinks('af'), _hp: hp }),
+      body: JSON.stringify({ name, email, links: collectLinks('af'), position: document.getElementById('accept-position').value, _hp: hp }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Server error');
